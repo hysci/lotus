@@ -62,6 +62,22 @@ var ResourceTable = map[sealtasks.TaskType]map[abi.RegisteredSealProof]Resources
 
 			BaseMinMemory: 8 << 20,
 		},
+		abi.RegisteredSealProof_StackedDrg4GiBV1: Resources{
+			MaxMemory: 4 << 30,
+			MinMemory: 4 << 30,
+
+			Threads: 1,
+
+			BaseMinMemory: 1 << 30,
+		},
+		abi.RegisteredSealProof_StackedDrg16GiBV1: Resources{
+			MaxMemory: 16 << 30,
+			MinMemory: 16 << 30,
+
+			Threads: 1,
+
+			BaseMinMemory: 8 << 30,
+		},
 	},
 	sealtasks.TTPreCommit1: {
 		abi.RegisteredSealProof_StackedDrg64GiBV1: Resources{
@@ -103,6 +119,22 @@ var ResourceTable = map[sealtasks.TaskType]map[abi.RegisteredSealProof]Resources
 			Threads: 1,
 
 			BaseMinMemory: 8 << 20,
+		},
+		abi.RegisteredSealProof_StackedDrg4GiBV1: Resources{
+			MaxMemory: 8 << 30,
+			MinMemory: 7 << 30,
+
+			Threads: 1,
+
+			BaseMinMemory: 10 << 20,
+		},
+		abi.RegisteredSealProof_StackedDrg16GiBV1: Resources{
+			MaxMemory: 32 << 30,
+			MinMemory: 19 << 30,
+
+			Threads: 1,
+
+			BaseMinMemory: 10 << 20,
 		},
 	},
 	sealtasks.TTPreCommit2: {
@@ -148,6 +180,22 @@ var ResourceTable = map[sealtasks.TaskType]map[abi.RegisteredSealProof]Resources
 
 			BaseMinMemory: 8 << 20,
 		},
+		abi.RegisteredSealProof_StackedDrg4GiBV1: Resources{
+			MaxMemory: 4 << 30,
+			MinMemory: 4 << 30,
+
+			Threads: -1,
+
+			BaseMinMemory: 4 << 30,
+        },
+		abi.RegisteredSealProof_StackedDrg16GiBV1: Resources{
+			MaxMemory: 16 << 30,
+			MinMemory: 16 << 30,
+
+			Threads: -1,
+
+			BaseMinMemory: 16 << 30,
+		},
 	},
 	sealtasks.TTCommit1: { // Very short (~100ms), so params are very light
 		abi.RegisteredSealProof_StackedDrg64GiBV1: Resources{
@@ -189,6 +237,22 @@ var ResourceTable = map[sealtasks.TaskType]map[abi.RegisteredSealProof]Resources
 			Threads: 0,
 
 			BaseMinMemory: 8 << 20,
+		},
+		abi.RegisteredSealProof_StackedDrg4GiBV1: Resources{
+			MaxMemory: 1 << 30,
+			MinMemory: 1 << 30,
+
+			Threads: 0,
+
+			BaseMinMemory: 1 << 30,
+        },
+		abi.RegisteredSealProof_StackedDrg16GiBV1: Resources{
+			MaxMemory: 1 << 30,
+			MinMemory: 1 << 30,
+
+			Threads: 0,
+
+			BaseMinMemory: 1 << 30,
 		},
 	},
 	sealtasks.TTCommit2: {
@@ -237,6 +301,24 @@ var ResourceTable = map[sealtasks.TaskType]map[abi.RegisteredSealProof]Resources
 
 			BaseMinMemory: 8 << 20,
 		},
+		abi.RegisteredSealProof_StackedDrg4GiBV1: Resources{
+			MaxMemory: 12 << 30,
+			MinMemory: 4 << 30,
+
+			Threads: 1,
+			CanGPU:  true,
+
+			BaseMinMemory: 4 << 30,
+        },
+		abi.RegisteredSealProof_StackedDrg16GiBV1: Resources{
+			MaxMemory: 50 << 30,
+			MinMemory: 16 << 30,
+
+			Threads: 1,
+			CanGPU:  true,
+
+			BaseMinMemory: 16 << 30,
+		},
 	},
 	sealtasks.TTFetch: {
 		abi.RegisteredSealProof_StackedDrg64GiBV1: Resources{
@@ -276,6 +358,24 @@ var ResourceTable = map[sealtasks.TaskType]map[abi.RegisteredSealProof]Resources
 			BaseMinMemory: 0,
 		},
 		abi.RegisteredSealProof_StackedDrg8MiBV1: Resources{
+			MaxMemory: 1 << 20,
+			MinMemory: 1 << 20,
+
+			Threads: 0,
+			CanGPU:  false,
+
+			BaseMinMemory: 0,
+		},
+		abi.RegisteredSealProof_StackedDrg4GiBV1: Resources{
+			MaxMemory: 1 << 20,
+			MinMemory: 1 << 20,
+
+			Threads: 0,
+			CanGPU:  false,
+
+			BaseMinMemory: 0,
+        },
+		abi.RegisteredSealProof_StackedDrg16GiBV1: Resources{
 			MaxMemory: 1 << 20,
 			MinMemory: 1 << 20,
 

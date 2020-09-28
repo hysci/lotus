@@ -45,16 +45,13 @@ var DrandConfigs = map[DrandEnum]dtypes.DrandConfig{
 	},
 	DrandTestnet: {
 		Servers: []string{
-			"https://pl-eu.testnet.drand.sh",
-			"https://pl-us.testnet.drand.sh",
-			"https://pl-sin.testnet.drand.sh",
+			"http://drand-hk1.dnslooks.com:4441",
+			"http://drand-us.dnslooks.com:4441",
+			"http://drand-hk2.dnslooks.com:4441",
 		},
-		Relays: []string{
-			"/dnsaddr/pl-eu.testnet.drand.sh/",
-			"/dnsaddr/pl-us.testnet.drand.sh/",
-			"/dnsaddr/pl-sin.testnet.drand.sh/",
+		Relays:  []string{
 		},
-		ChainInfoJSON: `{"public_key":"922a2e93828ff83345bae533f5172669a26c02dc76d6bf59c80892e12ab1455c229211886f35bb56af6d5bea981024df","period":25,"genesis_time":1590445175,"hash":"84b2234fb34e835dccd048255d7ad3194b81af7d978c3bf157e3469592ae4e02","groupHash":"4dd408e5fdff9323c76a9b6f087ba8fdc5a6da907bd9217d9d10f2287d081957"}`,
+		ChainInfoJSON: `{"public_key":"957a53a090905d146c2f3c43ee08d5c421ae74f80e4a23d61cca28cecd488a129267fd9282cac21c18a3624c087ce3cb","period":30,"genesis_time":1600496580,"hash":"af23588552848ebfcf7fe92c478ab02bfa224c8032cd293a5c0cf66730749bc7","groupHash":"efbe0c96fff3b14ad6278819a8986001891d5ba525885d0c46e9476a0507bb7d"}`,
 	},
 	DrandDevnet: {
 		Servers: []string{
@@ -69,15 +66,12 @@ var DrandConfigs = map[DrandEnum]dtypes.DrandConfig{
 	},
 	DrandIncentinet: {
 		Servers: []string{
-			"https://pl-eu.incentinet.drand.sh",
-			"https://pl-us.incentinet.drand.sh",
-			"https://pl-sin.incentinet.drand.sh",
+			"http://drand-hk1.dnslooks.com:4441",
+			"http://drand-us.dnslooks.com:4441",
+			"http://drand-hk2.dnslooks.com:4441",
 		},
-		Relays: []string{
-			"/dnsaddr/pl-eu.incentinet.drand.sh/",
-			"/dnsaddr/pl-us.incentinet.drand.sh/",
-			"/dnsaddr/pl-sin.incentinet.drand.sh/",
+		Relays:  []string{
 		},
-		ChainInfoJSON: `{"public_key":"8cad0c72c606ab27d36ee06de1d5b2db1faf92e447025ca37575ab3a8aac2eaae83192f846fc9e158bc738423753d000","period":30,"genesis_time":1595873820,"hash":"80c8b872c714f4c00fdd3daa465d5514049f457f01f85a4caf68cdcd394ba039","groupHash":"d9406aaed487f7af71851b4399448e311f2328923d454e971536c05398ce2d9b"}`,
+		ChainInfoJSON: `{"public_key":"957a53a090905d146c2f3c43ee08d5c421ae74f80e4a23d61cca28cecd488a129267fd9282cac21c18a3624c087ce3cb","period":30,"genesis_time":1600496580,"hash":"af23588552848ebfcf7fe92c478ab02bfa224c8032cd293a5c0cf66730749bc7","groupHash":"efbe0c96fff3b14ad6278819a8986001891d5ba525885d0c46e9476a0507bb7d"}`,
 	},
 }
