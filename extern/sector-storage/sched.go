@@ -349,6 +349,8 @@ func (sh *scheduler) trySched() {
 			task := (*sh.schedQueue)[sqi]
 			needRes := ResourceTable[task.taskType][sh.spt]
 
+			sectorGroup, exist := sh.execSectorWorker[task.sector]
+
 			task.indexHeap = sqi
 			for wnd, windowRequest := range sh.openWindows {
 				worker, ok := sh.workers[windowRequest.worker]
