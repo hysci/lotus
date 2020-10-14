@@ -34,6 +34,10 @@ func (s *allocSelector) Ok(ctx context.Context, task sealtasks.TaskType, spt abi
 		return false, nil
 	}
 
+	if ok, err := whnd.w.AllowableRange(ctx, task); !ok {
+		return false, err
+	}
+
 	paths, err := whnd.w.Paths(ctx)
 	if err != nil {
 		return false, xerrors.Errorf("getting worker paths: %w", err)

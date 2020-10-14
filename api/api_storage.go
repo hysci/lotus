@@ -5,6 +5,8 @@ import (
 	"context"
 	"time"
 
+	sectorstorage "github.com/filecoin-project/lotus/extern/sector-storage"
+
 	"github.com/ipfs/go-cid"
 
 	"github.com/filecoin-project/go-address"
@@ -64,6 +66,9 @@ type StorageMiner interface {
 	WorkerConnect(context.Context, string) error
 	WorkerStats(context.Context) (map[uint64]storiface.WorkerStats, error)
 	WorkerJobs(context.Context) (map[uint64][]storiface.WorkerJob, error)
+
+	GetWorker(ctx context.Context) (map[uint64]sectorstorage.WorkerInfo, error)
+	SetWorkerParam(ctx context.Context, worker uint64, key string, value string) error
 
 	// SealingSchedDiag dumps internal sealing scheduler state
 	SealingSchedDiag(context.Context) (interface{}, error)

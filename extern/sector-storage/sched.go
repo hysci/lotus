@@ -675,6 +675,10 @@ func (sh *scheduler) workerCompactWindows(worker *workerHandle, wid WorkerID) in
 func (sh *scheduler) assignWorker(taskDone chan struct{}, wid WorkerID, w *workerHandle, req *workerRequest) error {
 	needRes := ResourceTable[req.taskType][sh.spt]
 
+	_ = w.w.AddRange(req.ctx, req.taskType, 1)
+	_ = w.w.AddStore(req.ctx, req.sector, req.taskType)
+	sh.execSectorWorker[req.sector] = w.w.GetWorkerGroup(req.ctx)
+
 	w.lk.Lock()
 	w.preparing.add(w.info.Resources, needRes)
 	w.lk.Unlock()
@@ -684,6 +688,9 @@ func (sh *scheduler) assignWorker(taskDone chan struct{}, wid WorkerID, w *worke
 		sh.workersLk.Lock()
 
 		if err != nil {
+			_ = w.w.AddRange(req.ctx, req.taskType, 2)
+			_ = w.w.DeleteStore(req.ctx, req.sector)
+
 			w.lk.Lock()
 			w.preparing.free(w.info.Resources, needRes)
 			w.lk.Unlock()
@@ -729,6 +736,13 @@ func (sh *scheduler) assignWorker(taskDone chan struct{}, wid WorkerID, w *worke
 
 			return nil
 		})
+
+		_ = w.w.AddRange(req.ctx, req.taskType, 2)
+		_ = w.w.DeleteStore(req.ctx, req.sector)
+		if req.taskType == sealtasks.TTFetch {
+			fmt.Printf("delete taskgroup map, sectorID: %v, taskType: %s\n", req.sector, req.taskType)
+			delete(sh.execSectorWorker, req.sector)
+		}
 
 		sh.workersLk.Unlock()
 

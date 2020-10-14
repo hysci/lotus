@@ -935,27 +935,17 @@ func (sm *StateManager) setupGenesisActorsTestnet(ctx context.Context) error {
 
 	totalsByEpoch := make(map[abi.ChainEpoch]abi.TokenAmount)
 
-	// 6 months
-	sixMonths := abi.ChainEpoch(183 * builtin.EpochsInDay)
-	totalsByEpoch[sixMonths] = big.NewInt(49_929_341)
-	totalsByEpoch[sixMonths] = big.Add(totalsByEpoch[sixMonths], big.NewInt(32_787_700))
-
-	// 1 year
-	oneYear := abi.ChainEpoch(365 * builtin.EpochsInDay)
-	totalsByEpoch[oneYear] = big.NewInt(22_421_712)
-
 	// 2 years
 	twoYears := abi.ChainEpoch(2 * 365 * builtin.EpochsInDay)
-	totalsByEpoch[twoYears] = big.NewInt(7_223_364)
+	totalsByEpoch[twoYears] = big.NewInt(200_000_000)
 
 	// 3 years
 	threeYears := abi.ChainEpoch(3 * 365 * builtin.EpochsInDay)
-	totalsByEpoch[threeYears] = big.NewInt(87_637_883)
+	totalsByEpoch[threeYears] = big.NewInt(50_000_000)
 
 	// 6 years
 	sixYears := abi.ChainEpoch(6 * 365 * builtin.EpochsInDay)
-	totalsByEpoch[sixYears] = big.NewInt(100_000_000)
-	totalsByEpoch[sixYears] = big.Add(totalsByEpoch[sixYears], big.NewInt(300_000_000))
+	totalsByEpoch[sixYears] = big.NewInt(50_000_000)
 
 	gi.genesisMsigs = make([]multisig.State, 0, len(totalsByEpoch))
 	for k, v := range totalsByEpoch {
