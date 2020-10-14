@@ -57,6 +57,8 @@ type scheduler struct {
 	nextWorker WorkerID
 	workers    map[WorkerID]*workerHandle
 
+	execSectorWorker map[abi.SectorID]string
+
 	newWorkers chan *workerHandle
 
 	watchClosing  chan WorkerID
@@ -146,6 +148,8 @@ func newScheduler(spt abi.RegisteredSealProof) *scheduler {
 
 		nextWorker: 0,
 		workers:    map[WorkerID]*workerHandle{},
+
+		execSectorWorker: map[abi.SectorID]string{},
 
 		newWorkers: make(chan *workerHandle),
 
@@ -358,6 +362,16 @@ func (sh *scheduler) trySched() {
 					log.Errorf("worker referenced by windowRequest not found (worker: %d)", windowRequest.worker)
 					// TODO: How to move forward here?
 					continue
+				}
+
+				if task.taskType != sealtasks.TTFetch {
+					if exist && sectorGroup != "all" {
+						workerGroup := worker.w.GetWorkerGroup(task.ctx)
+						if workerGroup != sectorGroup {
+							fmt.Printf("sectorGroup does not match workerGroup, sectorid: %v, sectorGroup: %s, workerGroup: %s, taskType: %s \n", task.sector, sectorGroup, workerGroup, task.taskType)
+							continue
+						}
+					}
 				}
 
 				// TODO: allow bigger windows
