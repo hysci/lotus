@@ -45,13 +45,13 @@ var DrandConfigs = map[DrandEnum]dtypes.DrandConfig{
 	},
 	DrandTestnet: {
 		Servers: []string{
-			"http://drand-hk1.dnslooks.com:4441",
-			"http://drand-us.dnslooks.com:4441",
-			"http://drand-hk2.dnslooks.com:4441",
+			"http://193.8.82.144:9090",
+			"http://118.123.241.64:9090",
+			"http://118.123.244.155:9090",
+			"http://107.148.247.35:9090",
 		},
-		Relays:  []string{
-		},
-		ChainInfoJSON: `{"public_key":"957a53a090905d146c2f3c43ee08d5c421ae74f80e4a23d61cca28cecd488a129267fd9282cac21c18a3624c087ce3cb","period":30,"genesis_time":1600496580,"hash":"af23588552848ebfcf7fe92c478ab02bfa224c8032cd293a5c0cf66730749bc7","groupHash":"efbe0c96fff3b14ad6278819a8986001891d5ba525885d0c46e9476a0507bb7d"}`,
+		Relays:        []string{},
+		ChainInfoJSON: `{"public_key":"a637ff023ec222c3a40f8192071f501a87b0b7bf024e286cae79104d44f7c3a77bc5c8cef8af5c002f85e7dc19b9062e","period":30,"genesis_time":1602770640,"hash":"e23455c5a6ce6d7248bf4e7425e398b3716fdb0a398ee27a582ee10c5819d3d6","groupHash":"067a43e171316341854eaae8de56db54135a2b6b107ad73a8fb7eb8299718c48"}`,
 	},
 	DrandDevnet: {
 		Servers: []string{
@@ -66,12 +66,12 @@ var DrandConfigs = map[DrandEnum]dtypes.DrandConfig{
 	},
 	DrandIncentinet: {
 		Servers: []string{
-			"http://drand-hk1.dnslooks.com:4441",
-			"http://drand-us.dnslooks.com:4441",
-			"http://drand-hk2.dnslooks.com:4441",
+			"http://193.8.82.144:9090",
+			"http://118.123.241.64:9090",
+			"http://118.123.244.155:9090",
+			"http://107.148.247.35:9090",
 		},
-		Relays:  []string{
-		},
-		ChainInfoJSON: `{"public_key":"957a53a090905d146c2f3c43ee08d5c421ae74f80e4a23d61cca28cecd488a129267fd9282cac21c18a3624c087ce3cb","period":30,"genesis_time":1600496580,"hash":"af23588552848ebfcf7fe92c478ab02bfa224c8032cd293a5c0cf66730749bc7","groupHash":"efbe0c96fff3b14ad6278819a8986001891d5ba525885d0c46e9476a0507bb7d"}`,
+		Relays:        []string{},
+		ChainInfoJSON: `{"public_key":"a637ff023ec222c3a40f8192071f501a87b0b7bf024e286cae79104d44f7c3a77bc5c8cef8af5c002f85e7dc19b9062e","period":30,"genesis_time":1602770640,"hash":"e23455c5a6ce6d7248bf4e7425e398b3716fdb0a398ee27a582ee10c5819d3d6","groupHash":"067a43e171316341854eaae8de56db54135a2b6b107ad73a8fb7eb8299718c48"}`,
 	},
 }
