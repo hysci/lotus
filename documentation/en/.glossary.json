@@ -11,13 +11,13 @@
     "title": "Multiaddr",
     "value": "Multiaddr is a format for encoding addresses from various well-established network protocols. It is useful to write applications that future-proof their use of addresses, and allow multiple transport protocols and addresses to coexist."
   },
-  "attofil": {
-    "title": "attoFIL",
-    "value": "AttoFIL is a word used to describe 10^-18 FIL. The word atto comes from the Norwegian and Danish term: atten eighteen."
+  "attofic": {
+    "title": "attoFIC",
+    "value": "AttoFIC is a word used to describe 10^-18 FIC. The word atto comes from the Norwegian and Danish term: atten eighteen."
   },
-  "fil": {
-    "title": "FIL",
-    "value": "A ticker symbol is an abbreviation used to uniquely identify Filecoin when it is used in a wallet exchange or a cryptocurrency exchange."
+  "fic": {
+    "title": "FIC",
+    "value": "A ticker symbol is an abbreviation used to uniquely identify Filecash when it is used in a wallet exchange or a cryptocurrency exchange."
   },
   "epost": {
     "title": "Election Proof-of-Spacetime",

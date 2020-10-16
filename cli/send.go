@@ -30,12 +30,12 @@ var sendCmd = &cli.Command{
 		},
 		&cli.StringFlag{
 			Name:  "gas-premium",
-			Usage: "specify gas price to use in AttoFIL",
+			Usage: "specify gas price to use in AttoFIC",
 			Value: "0",
 		},
 		&cli.StringFlag{
 			Name:  "gas-feecap",
-			Usage: "specify gas fee cap to use in AttoFIL",
+			Usage: "specify gas fee cap to use in AttoFIC",
 			Value: "0",
 		},
 		&cli.Int64Flag{

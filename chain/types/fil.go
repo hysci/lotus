@@ -49,7 +49,9 @@ func ParseFIL(s string) (FIL, error) {
 	if suffix != "" {
 		norm := strings.ToLower(strings.TrimSpace(suffix))
 		switch norm {
-		case "", "fil":
+		case "", "fic":
+		case "attofic", "afic":
+			attofil = true
 		case "attofil", "afil":
 			attofil = true
 		default:
@@ -71,7 +73,7 @@ func ParseFIL(s string) (FIL, error) {
 		if attofil {
 			pref = "atto"
 		}
-		return FIL{}, fmt.Errorf("invalid %sFIL value: %q", pref, s)
+		return FIL{}, fmt.Errorf("invalid %sFIC value: %q", pref, s)
 	}
 
 	return FIL{r.Num()}, nil

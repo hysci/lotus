@@ -105,7 +105,7 @@ var initCmd = &cli.Command{
 		},
 		&cli.StringFlag{
 			Name:  "gas-premium",
-			Usage: "set gas premium for initialization messages in AttoFIL",
+			Usage: "set gas premium for initialization messages in AttoFIC",
 			Value: "0",
 		},
 		&cli.StringFlag{
