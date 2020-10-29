@@ -517,7 +517,7 @@ func NewConsiderOnlineStorageDealsConfigFunc(r repo.LockedRepo) (dtypes.Consider
 func NewSetConsideringOnlineStorageDealsFunc(r repo.LockedRepo) (dtypes.SetConsiderOnlineStorageDealsConfigFunc, error) {
 	return func(b bool) (err error) {
 		err = mutateCfg(r, func(cfg *config.StorageMiner) {
-			cfg.Dealmaking.ConsiderOnlineStorageDeals = b
+			cfg.Dealmaking.ConsiderOnlineStorageDeals = false
 		})
 		return
 	}, nil
@@ -535,7 +535,7 @@ func NewConsiderOnlineRetrievalDealsConfigFunc(r repo.LockedRepo) (dtypes.Consid
 func NewSetConsiderOnlineRetrievalDealsConfigFunc(r repo.LockedRepo) (dtypes.SetConsiderOnlineRetrievalDealsConfigFunc, error) {
 	return func(b bool) (err error) {
 		err = mutateCfg(r, func(cfg *config.StorageMiner) {
-			cfg.Dealmaking.ConsiderOnlineRetrievalDeals = b
+			cfg.Dealmaking.ConsiderOnlineRetrievalDeals = false
 		})
 		return
 	}, nil

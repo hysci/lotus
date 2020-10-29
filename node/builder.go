@@ -429,6 +429,7 @@ func ConfigStorageMiner(c interface{}) Option {
 	return Options(
 		ConfigCommon(&cfg.Common),
 
+		cfg.Dealmaking.Filter="false"
 		If(cfg.Dealmaking.Filter != "",
 			Override(new(dtypes.DealFilter), modules.BasicDealFilter(dealfilter.CliDealFilter(cfg.Dealmaking.Filter))),
 		),

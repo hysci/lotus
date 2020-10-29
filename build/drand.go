@@ -45,13 +45,12 @@ var DrandConfigs = map[DrandEnum]dtypes.DrandConfig{
 	},
 	DrandTestnet: {
 		Servers: []string{
-			"http://193.8.82.144:9090",
-			"http://118.123.241.64:9090",
-			"http://118.123.244.155:9090",
-			"http://107.148.247.35:9090",
+			"http://a1.filecoincash.com:9090",
+			"http://a2.filecoincash.com:9090",
+			"http://a3.filecoincash.com:9090",
 		},
 		Relays:        []string{},
-		ChainInfoJSON: `{"public_key":"a637ff023ec222c3a40f8192071f501a87b0b7bf024e286cae79104d44f7c3a77bc5c8cef8af5c002f85e7dc19b9062e","period":30,"genesis_time":1602770640,"hash":"e23455c5a6ce6d7248bf4e7425e398b3716fdb0a398ee27a582ee10c5819d3d6","groupHash":"067a43e171316341854eaae8de56db54135a2b6b107ad73a8fb7eb8299718c48"}`,
+		ChainInfoJSON: `{"public_key":"802b72507592ecf040e7c95a9d96d9e950b0dd426be36c62e2cdf3d4cb2a307acb5efa7c2fe222087e450f6e9ccc5257","period":30,"genesis_time":1602883530,"hash":"977236ee92f8edff9e28ab68bd0c5849be5226800a344e490267dd9950b273f3","groupHash":"18d8227dad40642b74463a492b37d43e1a8d3149710383d8cd5dadd2b241b2c4"}`,
 	},
 	DrandDevnet: {
 		Servers: []string{
@@ -66,12 +65,11 @@ var DrandConfigs = map[DrandEnum]dtypes.DrandConfig{
 	},
 	DrandIncentinet: {
 		Servers: []string{
-			"http://193.8.82.144:9090",
-			"http://118.123.241.64:9090",
-			"http://118.123.244.155:9090",
-			"http://107.148.247.35:9090",
+			"http://a1.filecoincash.com:9090",
+			"http://a2.filecoincash.com:9090",
+			"http://a3.filecoincash.com:9090",
 		},
 		Relays:        []string{},
-		ChainInfoJSON: `{"public_key":"a637ff023ec222c3a40f8192071f501a87b0b7bf024e286cae79104d44f7c3a77bc5c8cef8af5c002f85e7dc19b9062e","period":30,"genesis_time":1602770640,"hash":"e23455c5a6ce6d7248bf4e7425e398b3716fdb0a398ee27a582ee10c5819d3d6","groupHash":"067a43e171316341854eaae8de56db54135a2b6b107ad73a8fb7eb8299718c48"}`,
+		ChainInfoJSON: `{"public_key":"802b72507592ecf040e7c95a9d96d9e950b0dd426be36c62e2cdf3d4cb2a307acb5efa7c2fe222087e450f6e9ccc5257","period":30,"genesis_time":1602883530,"hash":"977236ee92f8edff9e28ab68bd0c5849be5226800a344e490267dd9950b273f3","groupHash":"18d8227dad40642b74463a492b37d43e1a8d3149710383d8cd5dadd2b241b2c4"}`,
 	},
 }

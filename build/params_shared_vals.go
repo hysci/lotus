@@ -63,7 +63,7 @@ const WinningPoStSectorSetLookback = abi.ChainEpoch(10)
 // Devnet settings
 
 const FilBase = uint64(2_000_000_000)
-const FilAllocStorageMining = uint64(600_000_000)
+const FilAllocStorageMining = uint64(1_100_000_000)
 
 const FilecoinPrecision = uint64(1_000_000_000_000_000_000)
 

@@ -17,15 +17,15 @@ var DrandSchedule = map[abi.ChainEpoch]DrandEnum{
 	UpgradeSmokeHeight: DrandMainnet,
 }
 
-const UpgradeBreezeHeight = 41280
+const UpgradeBreezeHeight = 999999
 const BreezeGasTampingDuration = 120
 
-const UpgradeSmokeHeight = 51000
+const UpgradeSmokeHeight = 1000000
 
 func init() {
 	power.ConsensusMinerMinPower = big.NewInt(20 << 30)
 	miner.SupportedProofTypes = map[abi.RegisteredSealProof]struct{}{
-		abi.RegisteredSealProof_StackedDrg4GiBV1: {},
+		abi.RegisteredSealProof_StackedDrg4GiBV1:  {},
 		abi.RegisteredSealProof_StackedDrg16GiBV1: {},
 	}
 }
