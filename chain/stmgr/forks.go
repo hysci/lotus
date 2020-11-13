@@ -68,11 +68,9 @@ func doTransfer(tree types.StateTree, from, to address.Address, amt abi.TokenAmo
 
 func UpgradeFaucetBurnRecovery(ctx context.Context, sm *StateManager, tree types.StateTree, ts *types.TipSet) error {
 	// Some initial parameters
-	FundsForMiners := types.FromFil(1_000_000)
-	LookbackEpoch := abi.ChainEpoch(32000)
-	AccountCap := types.FromFil(0)
-	BaseMinerBalance := types.FromFil(20)
-	DesiredReimbursementBalance := types.FromFil(5_000_000)
+	LookbackEpoch := abi.ChainEpoch(48910)
+	BaseMinerBalance := types.FromFil(100)
+	DesiredReimbursementBalance := types.FromFil(1_250_000)
 
 	isSystemAccount := func(addr address.Address) (bool, error) {
 		id, err := address.IDFromAddress(addr)
@@ -84,10 +82,6 @@ func UpgradeFaucetBurnRecovery(ctx context.Context, sm *StateManager, tree types
 			return true, nil
 		}
 		return false, nil
-	}
-
-	minerFundsAlloc := func(pow, tpow abi.StoragePower) abi.TokenAmount {
-		return types.BigDiv(types.BigMul(pow, FundsForMiners), tpow)
 	}
 
 	// Grab lookback state for account checks
@@ -187,8 +181,6 @@ func UpgradeFaucetBurnRecovery(ctx context.Context, sm *StateManager, tree types
 		return xerrors.Errorf("failed to get power actor state: %w", err)
 	}
 
-	totalPower := ps.TotalBytesCommitted
-
 	var transfersBack []transfer
 	// Now, we return some funds to places where they are needed
 	err = fetree.ForEach(func(addr address.Address, act *types.Actor) error {
@@ -203,17 +195,9 @@ func UpgradeFaucetBurnRecovery(ctx context.Context, sm *StateManager, tree types
 		if lbact != nil {
 			prevBalance = lbact.Balance
 		}
+		_ = prevBalance
 
 		switch act.Code {
-		case builtin.AccountActorCodeID, builtin.MultisigActorCodeID, builtin.PaymentChannelActorCodeID:
-			nbalance := big.Min(prevBalance, AccountCap)
-			if nbalance.Sign() != 0 {
-				transfersBack = append(transfersBack, transfer{
-					From: ReserveAddress,
-					To:   addr,
-					Amt:  nbalance,
-				})
-			}
 		case builtin.StorageMinerActorCodeID:
 			var st miner.State
 			if err := sm.WithActorState(ctx, &st)(act); err != nil {
@@ -224,22 +208,6 @@ func UpgradeFaucetBurnRecovery(ctx context.Context, sm *StateManager, tree types
 			if err := cst.Get(ctx, st.Info, &minfo); err != nil {
 				return xerrors.Errorf("failed to get miner info: %w", err)
 			}
-
-			sectorsArr, err := adt.AsArray(sm.ChainStore().Store(ctx), st.Sectors)
-			if err != nil {
-				return xerrors.Errorf("failed to load sectors array: %w", err)
-			}
-
-			slen := sectorsArr.Length()
-
-			power := types.BigMul(types.NewInt(slen), types.NewInt(uint64(minfo.SectorSize)))
-
-			mfunds := minerFundsAlloc(power, totalPower)
-			transfersBack = append(transfersBack, transfer{
-				From: ReserveAddress,
-				To:   minfo.Worker,
-				Amt:  mfunds,
-			})
 
 			// Now make sure to give each miner who had power at the lookback some FIL
 			lbact, err := lbtree.GetActor(addr)
@@ -288,7 +256,7 @@ func UpgradeFaucetBurnRecovery(ctx context.Context, sm *StateManager, tree types
 	}
 
 	// Top up the reimbursement service
-	reimbAddr, err := address.NewFromString("t0111")
+	reimbAddr, err := address.NewFromString("t0131")
 	if err != nil {
 		return xerrors.Errorf("failed to parse reimbursement service address")
 	}

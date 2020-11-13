@@ -14,15 +14,17 @@ import (
 
 var DrandSchedule = map[abi.ChainEpoch]DrandEnum{
 	0:                  DrandIncentinet,
-	UpgradeSmokeHeight: DrandMainnet,
 }
 
-const UpgradeBreezeHeight = 999999
+const UpgradeCreeperHeight = 54720
+const UpgradeBreezeHeight = 51910
 const BreezeGasTampingDuration = 120
+const RcPos = -2640
 
 const UpgradeSmokeHeight = 1000000
 
 func init() {
+	miner.UpgradeRcHeight = UpgradeBreezeHeight + RcPos
 	power.ConsensusMinerMinPower = big.NewInt(20 << 30)
 	miner.SupportedProofTypes = map[abi.RegisteredSealProof]struct{}{
 		abi.RegisteredSealProof_StackedDrg4GiBV1:  {},

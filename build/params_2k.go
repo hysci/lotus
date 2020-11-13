@@ -10,6 +10,7 @@ import (
 	"github.com/filecoin-project/specs-actors/actors/builtin/verifreg"
 )
 
+const UpgradeCreeperHeight = -1
 const UpgradeBreezeHeight = -1
 const BreezeGasTampingDuration = 0
 

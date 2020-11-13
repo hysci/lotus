@@ -1006,6 +1006,7 @@ func (a *StateAPI) StateMinerPreCommitDepositForPower(ctx context.Context, maddr
 		rewardState.ThisEpochRewardSmoothed,
 		powerState.ThisEpochQAPowerSmoothed,
 		sectorWeight,
+		ts.Height(),
 	)
 
 	return types.BigDiv(types.BigMul(deposit, initialPledgeNum), initialPledgeDen), nil
@@ -1092,6 +1093,7 @@ func (a *StateAPI) StateMinerInitialPledgeCollateral(ctx context.Context, maddr 
 		rewardState.ThisEpochRewardSmoothed,
 		powerState.ThisEpochQAPowerSmoothed,
 		circSupply.FilCirculating,
+		ts.Height(),
 	)
 
 	return types.BigDiv(types.BigMul(initialPledge, initialPledgeNum), initialPledgeDen), nil

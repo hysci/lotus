@@ -46,7 +46,8 @@ type StateManager struct {
 	stlk          sync.Mutex
 	genesisMsigLk sync.Mutex
 	newVM         func(*vm.VMOpts) (*vm.VM, error)
-	genInfo       *genesisInfo
+	ancestorGenInfo *genesisInfo
+	creeperGenInfo  *genesisInfo
 }
 
 func NewStateManager(cs *store.ChainStore) *StateManager {
@@ -890,7 +891,7 @@ func (sm *StateManager) setupGenesisActors(ctx context.Context) error {
 		gi.genesisMsigs = append(gi.genesisMsigs, ns)
 	}
 
-	sm.genInfo = &gi
+	sm.ancestorGenInfo = &gi
 
 	return nil
 }
@@ -898,7 +899,7 @@ func (sm *StateManager) setupGenesisActors(ctx context.Context) error {
 // sets up information about the actors in the genesis state
 // For testnet we use a hardcoded set of multisig states, instead of what's actually in the genesis multisigs
 // We also do not consider ANY account actors (including the faucet)
-func (sm *StateManager) setupGenesisActorsTestnet(ctx context.Context) error {
+func (sm *StateManager) setupAncestorGenesisActorsTestnet(ctx context.Context) error {
 
 	gi := genesisInfo{}
 
@@ -957,8 +958,79 @@ func (sm *StateManager) setupGenesisActorsTestnet(ctx context.Context) error {
 		gi.genesisMsigs = append(gi.genesisMsigs, ns)
 	}
 
-	sm.genInfo = &gi
+	sm.ancestorGenInfo = &gi
 
+	return nil
+}
+
+// sets up information about the creeper in the genesis state
+func (sm *StateManager) setupCreeperGenesisActorsTestnet(ctx context.Context) error {
+	gi := genesisInfo{}
+
+	gb, err := sm.cs.GetGenesis()
+	if err != nil {
+		return xerrors.Errorf("getting genesis block: %w", err)
+	}
+
+	gts, err := types.NewTipSet([]*types.BlockHeader{gb})
+	if err != nil {
+		return xerrors.Errorf("getting genesis tipset: %w", err)
+	}
+
+	st, _, err := sm.TipSetState(ctx, gts)
+	if err != nil {
+		return xerrors.Errorf("getting genesis tipset state: %w", err)
+	}
+
+	cst := cbor.NewCborStore(sm.cs.Blockstore())
+	sTree, err := state.LoadStateTree(cst, st)
+	if err != nil {
+		return xerrors.Errorf("loading state tree: %w", err)
+	}
+
+	gi.genesisMarketFunds, err = getFilMarketLocked(ctx, sTree)
+	if err != nil {
+		return xerrors.Errorf("setting up genesis market funds: %w", err)
+	}
+
+	gi.genesisPledge, err = getFilPowerLocked(ctx, sTree)
+	if err != nil {
+		return xerrors.Errorf("setting up genesis pledge: %w", err)
+	}
+
+	totalsByEpoch := make(map[abi.ChainEpoch]abi.TokenAmount)
+	totalsStartEpoch := make(map[abi.ChainEpoch]abi.ChainEpoch)
+
+	threeDays := abi.ChainEpoch(3 * builtin.EpochsInDay)
+	totalsByEpoch[threeDays] = big.Mul(big.NewInt(83_333_332), big.NewInt(int64(build.FilecoinPrecision / 10)))
+	totalsStartEpoch[threeDays] = abi.ChainEpoch(54720)
+
+	twoYears := abi.ChainEpoch((2*365) * builtin.EpochsInDay)
+	totalsByEpoch[twoYears] = big.Mul(big.NewInt(1_916_666_666), big.NewInt(int64(build.FilecoinPrecision / 10)))
+	totalsStartEpoch[twoYears] = abi.ChainEpoch(135360)
+
+	threeYears := abi.ChainEpoch((3*365) * builtin.EpochsInDay)
+	totalsByEpoch[threeYears] = big.Mul(big.NewInt(50_000_000), big.NewInt(int64(build.FilecoinPrecision)))
+	totalsStartEpoch[threeYears] = abi.ChainEpoch(54720)
+
+	sixYears := abi.ChainEpoch((6*365) * builtin.EpochsInDay)
+	totalsByEpoch[sixYears] = big.Mul(big.NewInt(50_000_000), big.NewInt(int64(build.FilecoinPrecision)))
+	totalsStartEpoch[sixYears] = abi.ChainEpoch(54720)
+
+	gi.genesisMsigs = make([]multisig.State, 0, len(totalsByEpoch))
+	for k, v := range totalsByEpoch {
+		ns := multisig.State{
+			InitialBalance: v,
+			UnlockDuration: k,
+			PendingTxns:    cid.Undef,
+			// In the ancestor logic, the start epoch was 0. This changes in the fork logic of the creeper upgrade itself.
+			StartEpoch: totalsStartEpoch[k],
+		}
+		gi.genesisMsigs = append(gi.genesisMsigs, ns)
+	}
+
+	sm.creeperGenInfo = &gi
+	 
 	return nil
 }
 
@@ -967,13 +1039,23 @@ func (sm *StateManager) setupGenesisActorsTestnet(ctx context.Context) error {
 // - For Accounts, it counts max(currentBalance - genesisBalance, 0).
 func (sm *StateManager) GetFilVested(ctx context.Context, height abi.ChainEpoch, st *state.StateTree) (abi.TokenAmount, error) {
 	vf := big.Zero()
-	for _, v := range sm.genInfo.genesisMsigs {
-		au := big.Sub(v.InitialBalance, v.AmountLocked(height))
-		vf = big.Add(vf, au)
+	if height <= build.UpgradeCreeperHeight {
+		for _, v := range sm.ancestorGenInfo.genesisMsigs {
+			au := big.Sub(v.InitialBalance, v.AmountLocked(height))
+			vf = big.Add(vf, au)
+		}
+	} else {
+		for _, v := range sm.creeperGenInfo.genesisMsigs {
+			// In the ancestor logic, we simply called AmountLocked(height), assuming startEpoch was 0.
+			// The start epoch changed in the creeper upgrade.
+			au := big.Sub(v.InitialBalance, v.AmountLocked(height-v.StartEpoch))
+			vf = big.Add(vf, au)
+		}
 	}
 
 	// there should not be any such accounts in testnet (and also none in mainnet?)
-	for _, v := range sm.genInfo.genesisActors {
+	// continue to use ancestorGenInfo, nothing changed at the last epoch
+	for _, v := range sm.ancestorGenInfo.genesisActors {
 		act, err := st.GetActor(v.addr)
 		if err != nil {
 			return big.Zero(), xerrors.Errorf("failed to get actor: %w", err)
@@ -985,8 +1067,8 @@ func (sm *StateManager) GetFilVested(ctx context.Context, height abi.ChainEpoch,
 		}
 	}
 
-	vf = big.Add(vf, sm.genInfo.genesisPledge)
-	vf = big.Add(vf, sm.genInfo.genesisMarketFunds)
+	vf = big.Add(vf, sm.ancestorGenInfo.genesisPledge)
+	vf = big.Add(vf, sm.ancestorGenInfo.genesisMarketFunds)
 
 	return vf, nil
 }
@@ -1061,10 +1143,16 @@ func GetFilBurnt(ctx context.Context, st *state.StateTree) (abi.TokenAmount, err
 func (sm *StateManager) GetCirculatingSupplyDetailed(ctx context.Context, height abi.ChainEpoch, st *state.StateTree) (api.CirculatingSupply, error) {
 	sm.genesisMsigLk.Lock()
 	defer sm.genesisMsigLk.Unlock()
-	if sm.genInfo == nil {
-		err := sm.setupGenesisActorsTestnet(ctx)
+	if sm.ancestorGenInfo == nil {
+		err := sm.setupAncestorGenesisActorsTestnet(ctx)
 		if err != nil {
-			return api.CirculatingSupply{}, xerrors.Errorf("failed to setup genesis information: %w", err)
+			return api.CirculatingSupply{}, xerrors.Errorf("failed to setup ancestor genesis information: %w", err)
+		}
+	}
+	if sm.creeperGenInfo == nil {
+		err := sm.setupCreeperGenesisActorsTestnet(ctx)
+		if err != nil {
+			return api.CirculatingSupply{}, xerrors.Errorf("failed to setup creeper genesis information: %w", err)
 		}
 	}
 
