@@ -421,6 +421,16 @@ func (a *StateAPI) StateWaitMsg(ctx context.Context, msg cid.Cid, confidence uin
 		}
 
 		returndec = t
+	} else {
+		cmsg, err := a.Chain.GetCMessage(msg)
+		if err != nil {
+			return nil, xerrors.Errorf("failed to load message after successful receipt search: %w", err)
+		}
+
+		vmsg := cmsg.VMMessage()
+		fmt.Println(vmsg.GasFeeCap.String())
+		fmt.Println(vmsg.GasLimit)
+		recpt.TotalCost = big.Mul(vmsg.GasFeeCap, types.NewInt(uint64(vmsg.GasLimit)))
 	}
 
 	return &api.MsgLookup{

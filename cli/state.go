@@ -1239,6 +1239,7 @@ var stateWaitMsgCmd = &cli.Command{
 		fmt.Printf("message was executed in tipset: %s\n", mw.TipSet.Cids())
 		fmt.Printf("Exit Code: %d\n", mw.Receipt.ExitCode)
 		fmt.Printf("Gas Used: %d\n", mw.Receipt.GasUsed)
+		fmt.Printf("Total Cost: %s\n", mw.Receipt.TotalCost.String())
 		fmt.Printf("Return: %x\n", mw.Receipt.Return)
 		if err := printReceiptReturn(ctx, api, m, mw.Receipt); err != nil {
 			return err

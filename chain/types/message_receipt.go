@@ -4,12 +4,14 @@ import (
 	"bytes"
 
 	"github.com/filecoin-project/go-state-types/exitcode"
+	"github.com/filecoin-project/go-state-types/abi"
 )
 
 type MessageReceipt struct {
 	ExitCode exitcode.ExitCode
 	Return   []byte
 	GasUsed  int64
+	TotalCost abi.TokenAmount
 }
 
 func (mr *MessageReceipt) Equals(o *MessageReceipt) bool {
