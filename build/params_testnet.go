@@ -21,7 +21,7 @@ const UpgradeBreezeHeight = 51910
 const BreezeGasTampingDuration = 120
 const RcPos = -2640
 
-const UpgradeSmokeHeight = 1000000
+const UpgradeSmokeHeight = 72070
 
 func init() {
 	miner.UpgradeRcHeight = UpgradeBreezeHeight + RcPos
