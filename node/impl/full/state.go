@@ -402,15 +402,15 @@ func (a *StateAPI) StateWaitMsg(ctx context.Context, msg cid.Cid, confidence uin
 		return nil, err
 	}
 
+	cmsg, err := a.Chain.GetCMessage(msg)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to load message after successful receipt search: %w", err)
+	}
+
+	vmsg := cmsg.VMMessage()
+
 	var returndec interface{}
 	if recpt.ExitCode == 0 && len(recpt.Return) > 0 {
-		cmsg, err := a.Chain.GetCMessage(msg)
-		if err != nil {
-			return nil, xerrors.Errorf("failed to load message after successful receipt search: %w", err)
-		}
-
-		vmsg := cmsg.VMMessage()
-
 		t, err := stmgr.GetReturnType(ctx, a.StateManager, vmsg.To, vmsg.Method, ts)
 		if err != nil {
 			return nil, xerrors.Errorf("failed to get return type: %w", err)
@@ -421,17 +421,24 @@ func (a *StateAPI) StateWaitMsg(ctx context.Context, msg cid.Cid, confidence uin
 		}
 
 		returndec = t
-	} else {
-		cmsg, err := a.Chain.GetCMessage(msg)
-		if err != nil {
-			return nil, xerrors.Errorf("failed to load message after successful receipt search: %w", err)
-		}
-
-		vmsg := cmsg.VMMessage()
-		fmt.Println(vmsg.GasFeeCap.String())
-		fmt.Println(vmsg.GasLimit)
-		recpt.TotalCost = big.Mul(vmsg.GasFeeCap, types.NewInt(uint64(vmsg.GasLimit)))
 	}
+
+	childTs, err := a.Chain.LoadTipSet(ts.Key())
+	if err != nil {
+		return nil, xerrors.Errorf("loading tipset: %w", err)
+	}
+
+	ts_, err := a.Chain.LoadTipSet(childTs.Parents())
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := a.StateReplay(ctx, ts_.Key(), msg)
+	if err != nil {
+		return nil, xerrors.Errorf("replay call failed: %w", err)
+	}
+
+	recpt.TotalCost = big.Sub(big.Mul(vmsg.GasFeeCap, types.NewInt(uint64(vmsg.GasLimit))), res.MsgRct.TotalCost)
 
 	return &api.MsgLookup{
 		Message:   found,
