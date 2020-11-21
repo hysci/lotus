@@ -373,21 +373,21 @@ func (l *LocalWorker) AllowableRange(ctx context.Context, task sealtasks.TaskTyp
 	case sealtasks.TTPreCommit1:
 		if l.preCommit1Max > 0 {
 			if l.preCommit1Now >= l.preCommit1Max {
-				log.Info("this task is over range, task: TTPreCommit1, max: %v, now: %v", l.preCommit1Max, l.preCommit1Now)
+				log.Infof("this task is over range, task: TTPreCommit1, max: %v, now: %v", l.preCommit1Max, l.preCommit1Now)
 				return false, nil
 			}
 		}
 	case sealtasks.TTPreCommit2:
 		if l.preCommit2Max > 0 {
 			if l.preCommit2Now >= l.preCommit2Max {
-				log.Info("this task is over range, task: TTPreCommit2, max: %v, now: %v", l.preCommit2Max, l.preCommit2Now)
+				log.Infof("this task is over range, task: TTPreCommit2, max: %v, now: %v", l.preCommit2Max, l.preCommit2Now)
 				return false, nil
 			}
 		}
 	case sealtasks.TTCommit1, sealtasks.TTCommit2:
 		if l.commitMax > 0 {
 			if l.commitNow >= l.commitMax {
-				log.Info("this task is over range, task: TTCommit1, max: %v, now: %v", l.commitMax, l.commitNow)
+				log.Infof("this task is over range, task: TTCommit1, max: %v, now: %v", l.commitMax, l.commitNow)
 				return false, nil
 			}
 		}
