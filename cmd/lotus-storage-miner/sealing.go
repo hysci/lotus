@@ -118,6 +118,7 @@ var sealingWorkersCmd = &cli.Command{
 			}
 
 			if _, ok := Info[stat.id]; ok {
+				fmt.Printf("\tGroup: %s\n", color.RedString(Info[stat.id].Group))
 				fmt.Printf("\tAcceptTasks: %v\n", Info[stat.id].AcceptTasks)
 				fmt.Printf("\tPreCommit1Max: %d\tPreCommit2Max: %d\tCommitMax: %d\n", Info[stat.id].PreCommit1Max, Info[stat.id].PreCommit2Max, Info[stat.id].CommitMax)
 				fmt.Printf("\tPreCommit1Now: %d\tPreCommit2Now: %d\tCommitNow: %d\n", Info[stat.id].PreCommit1Now, Info[stat.id].PreCommit2Now, Info[stat.id].CommitNow)
