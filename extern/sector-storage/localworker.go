@@ -70,6 +70,10 @@ func NewLocalWorker(wcfg WorkerConfig, store stores.Store, local *stores.Local, 
 	for _, taskType := range wcfg.TaskTypes {
 		acceptTasks[taskType] = struct{}{}
 	}
+	
+	if wcfg.Group == "" {
+		wcfg.Group = "all"
+	}
 
 	return &LocalWorker{
 		scfg: &ffiwrapper.Config{
@@ -412,6 +416,7 @@ func (l *LocalWorker) GetWorkerInfo(ctx context.Context) WorkerInfo {
 		CommitMax:     l.commitMax,
 		CommitNow:     l.commitNow,
 		AcceptTasks:   task,
+		Group:         l.group,
 	}
 
 	workerInfo.StoreList = make(map[string]string)
