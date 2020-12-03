@@ -2,6 +2,7 @@ package apistruct
 
 import (
 	"context"
+	sectorstorage "github.com/filecoin-project/lotus/extern/sector-storage"
 	"io"
 	"time"
 
@@ -342,6 +343,15 @@ type StorageMinerStruct struct {
 		StorageLock          func(ctx context.Context, sector abi.SectorID, read storiface.SectorFileType, write storiface.SectorFileType) error                          `perm:"admin"`
 		StorageTryLock       func(ctx context.Context, sector abi.SectorID, read storiface.SectorFileType, write storiface.SectorFileType) (bool, error)                  `perm:"admin"`
 
+		WorkerConnect func(context.Context, string) error                             `perm:"admin"` // TODO: worker perm
+		WorkerStats   func(context.Context) (map[uint64]storiface.WorkerStats, error) `perm:"admin"`
+		WorkerJobs    func(context.Context) (map[uint64][]storiface.WorkerJob, error) `perm:"admin"`
+
+		GetWorker      func(ctx context.Context) (map[uint64]sectorstorage.WorkerInfo, error)   `perm:"admin"`
+		SetWorkerParam func(ctx context.Context, worker uint64, key string, value string) error `perm:"admin"`
+
+		SealingSchedDiag func(context.Context) (interface{}, error) `perm:"admin"`
+
 		DealsImportData                       func(ctx context.Context, dealPropCid cid.Cid, file string) error `perm:"write"`
 		DealsList                             func(ctx context.Context) ([]api.MarketDeal, error)               `perm:"read"`
 		DealsConsiderOnlineStorageDeals       func(context.Context) (bool, error)                               `perm:"read"`
@@ -447,6 +457,15 @@ type WalletStruct struct {
 		WalletExport func(context.Context, address.Address) (*types.KeyInfo, error)                         `perm:"admin"`
 		WalletImport func(context.Context, *types.KeyInfo) (address.Address, error)                         `perm:"admin"`
 		WalletDelete func(context.Context, address.Address) error                                           `perm:"write"`
+		Closing func(context.Context) (<-chan struct{}, error) `perm:"admin"`
+
+		AddRange        func(ctx context.Context, task sealtasks.TaskType, addType int) error         `perm:"admin"`
+		AllowableRange  func(ctx context.Context, task sealtasks.TaskType) (bool, error)              `perm:"admin"`
+		GetWorkerInfo   func(ctx context.Context) sectorstorage.WorkerInfo                            `perm:"admin"`
+		AddStore        func(ctx context.Context, ID abi.SectorID, taskType sealtasks.TaskType) error `perm:"admin"`
+		DeleteStore     func(ctx context.Context, ID abi.SectorID, taskType sealtasks.TaskType) error                              `perm:"admin"`
+		SetWorkerParams func(ctx context.Context, key string, val string) error                       `perm:"admin"`
+		GetWorkerGroup  func(ctx context.Context) string                                              `perm:"admin"`
 	}
 }
 
@@ -1342,6 +1361,16 @@ func (c *StorageMinerStruct) SealingSchedDiag(ctx context.Context, doSched bool)
 
 func (c *StorageMinerStruct) SealingAbort(ctx context.Context, call storiface.CallID) error {
 	return c.Internal.SealingAbort(ctx, call)
+func (c *StorageMinerStruct) GetWorker(ctx context.Context) (map[uint64]sectorstorage.WorkerInfo, error) {
+	return c.Internal.GetWorker(ctx)
+}
+
+func (c *StorageMinerStruct) SetWorkerParam(ctx context.Context, worker uint64, key string, value string) error {
+	return c.Internal.SetWorkerParam(ctx, worker, key, value)
+}
+
+func (c *StorageMinerStruct) SealingSchedDiag(ctx context.Context) (interface{}, error) {
+	return c.Internal.SealingSchedDiag(ctx)
 }
 
 func (c *StorageMinerStruct) StorageAttach(ctx context.Context, si stores.StorageInfo, st fsutil.FsStat) error {
@@ -1752,6 +1781,35 @@ func (c *WalletStruct) WalletImport(ctx context.Context, ki *types.KeyInfo) (add
 
 func (c *WalletStruct) WalletDelete(ctx context.Context, addr address.Address) error {
 	return c.Internal.WalletDelete(ctx, addr)
+}
+
+
+func (w *WorkerStruct) AddRange(ctx context.Context, task sealtasks.TaskType, addType int) error {
+	return w.Internal.AddRange(ctx, task, addType)
+}
+
+func (w *WorkerStruct) AllowableRange(ctx context.Context, task sealtasks.TaskType) (bool, error) {
+	return w.Internal.AllowableRange(ctx, task)
+}
+
+func (c *WorkerStruct) GetWorkerInfo(ctx context.Context) sectorstorage.WorkerInfo {
+	return c.Internal.GetWorkerInfo(ctx)
+}
+
+func (c *WorkerStruct) AddStore(ctx context.Context, ID abi.SectorID, taskType sealtasks.TaskType) error {
+	return c.Internal.AddStore(ctx, ID, taskType)
+}
+
+func (c *WorkerStruct) DeleteStore(ctx context.Context, ID abi.SectorID, taskType sealtasks.TaskType) error {
+	return c.Internal.DeleteStore(ctx, ID, taskType)
+}
+
+func (c *WorkerStruct) SetWorkerParams(ctx context.Context, key string, val string) error {
+	return c.Internal.SetWorkerParams(ctx, key, val)
+}
+
+func (c *WorkerStruct) GetWorkerGroup(ctx context.Context) string {
+	return c.Internal.GetWorkerGroup(ctx)
 }
 
 var _ api.Common = &CommonStruct{}

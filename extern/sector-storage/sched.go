@@ -54,6 +54,18 @@ type WorkerSelector interface {
 type scheduler struct {
 	workersLk sync.RWMutex
 	workers   map[WorkerID]*workerHandle
+	spt       abi.RegisteredSealProof
+
+	workersLk  sync.RWMutex
+	nextWorker WorkerID
+	workers    map[WorkerID]*workerHandle
+
+	execSectorWorker sectorGroup
+
+	newWorkers chan *workerHandle
+
+	watchClosing  chan WorkerID
+	workerClosing chan WorkerID
 
 	schedule       chan *workerRequest
 	windowRequests chan *schedWindowRequest
@@ -71,6 +83,11 @@ type scheduler struct {
 	closing  chan struct{}
 	closed   chan struct{}
 	testSync chan struct{} // used for testing
+}
+
+type sectorGroup struct {
+	lk    sync.RWMutex
+	group map[abi.SectorID]string
 }
 
 type workerHandle struct {
@@ -145,6 +162,10 @@ type workerResponse struct {
 func newScheduler() *scheduler {
 	return &scheduler{
 		workers: map[WorkerID]*workerHandle{},
+
+		execSectorWorker: sectorGroup{
+			group: map[abi.SectorID]string{},
+		},
 
 		schedule:       make(chan *workerRequest),
 		windowRequests: make(chan *schedWindowRequest, 20),
@@ -378,6 +399,10 @@ func (sh *scheduler) trySched() {
 			task := (*sh.schedQueue)[sqi]
 			needRes := ResourceTable[task.taskType][task.sector.ProofType]
 
+			sh.execSectorWorker.lk.RLock()
+			sectorGroup, exist := sh.execSectorWorker.group[task.sector]
+			sh.execSectorWorker.lk.RUnlock()
+
 			task.indexHeap = sqi
 			for wnd, windowRequest := range sh.openWindows {
 				worker, ok := sh.workers[windowRequest.worker]
@@ -390,6 +415,15 @@ func (sh *scheduler) trySched() {
 				if !worker.enabled {
 					log.Debugw("skipping disabled worker", "worker", windowRequest.worker)
 					continue
+				}
+				if task.taskType != sealtasks.TTFetch {
+					if exist && sectorGroup != "all" {
+						workerGroup := worker.w.GetWorkerGroup(task.ctx)
+						if workerGroup != sectorGroup {
+							log.Infof("sectorGroup does not match workerGroup, sectorid: %v, sectorGroup: %s, workerGroup: %s, taskType: %s \n", task.sector, sectorGroup, workerGroup, task.taskType)
+							continue
+						}
+					}
 				}
 
 				// TODO: allow bigger windows
@@ -461,6 +495,14 @@ func (sh *scheduler) trySched() {
 		for _, wnd := range acceptableWindows[task.indexHeap] {
 			wid := sh.openWindows[wnd].worker
 			wr := sh.workers[wid].info.Resources
+			worker := sh.workers[wid]
+
+			ok, err := worker.w.AllowableRange(task.ctx, task.taskType)
+			if !ok || err != nil {
+				// worker.lk.Unlock()
+				// windows[wnd].lk.Unlock()
+				continue
+			}
 
 			log.Debugf("SCHED try assign sqi:%d sector %d to window %d", sqi, task.sector.ID.Number, wnd)
 
@@ -470,6 +512,16 @@ func (sh *scheduler) trySched() {
 			}
 
 			log.Debugf("SCHED ASSIGNED sqi:%d sector %d task %s to window %d", sqi, task.sector.ID.Number, task.taskType, wnd)
+			err = worker.w.AddRange(task.ctx, task.taskType, 1)
+			if err != nil {
+				continue
+			}
+			err = worker.w.AddStore(task.ctx, task.sector, task.taskType)
+			if err != nil {
+				continue
+			}
+
+			log.Debugf("SCHED ASSIGNED sqi:%d sector %d task %s to window %d", sqi, task.sector.Number, task.taskType, wnd)
 
 			windows[wnd].allocated.add(wr, needRes)
 			// TODO: We probably want to re-sort acceptableWindows here based on new

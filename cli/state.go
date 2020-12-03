@@ -449,6 +449,8 @@ var stateReplayCmd = &cli.Command{
 			return xerrors.Errorf("replay call failed: %w", err)
 		}
 
+		TotalCost := big.Sub(big.Mul(types.NewInt(uint64(res.Msg.GasLimit)), res.Msg.GasFeeCap), res.MsgRct.Refund)
+
 		fmt.Println("Replay receipt:")
 		fmt.Printf("Exit code: %d\n", res.MsgRct.ExitCode)
 		fmt.Printf("Return: %x\n", res.MsgRct.Return)
@@ -463,6 +465,7 @@ var stateReplayCmd = &cli.Command{
 		}
 		fmt.Printf("Total Message Cost: %d\n", res.GasCost.TotalCost)
 
+		fmt.Printf("Total Cost: %s\n", TotalCost.String())
 		if res.MsgRct.ExitCode != 0 {
 			fmt.Printf("Error message: %q\n", res.Error)
 		}
@@ -1569,7 +1572,7 @@ func formatOutput(t string, val []byte) (string, error) {
 	case "big", "int", "bigint":
 		bi := types.BigFromBytes(val)
 		return bi.String(), nil
-	case "fil":
+	case "fic":
 		bi := types.FIL(types.BigFromBytes(val))
 		return bi.String(), nil
 	case "pid", "peerid", "peer":

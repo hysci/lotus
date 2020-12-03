@@ -11,30 +11,33 @@ import (
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/lotus/chain/actors/policy"
+	miner0 "github.com/filecoin-project/specs-actors/actors/builtin/miner"
 	builtin2 "github.com/filecoin-project/specs-actors/v2/actors/builtin"
 )
 
 var DrandSchedule = map[abi.ChainEpoch]DrandEnum{
-	0:                  DrandIncentinet,
-	UpgradeSmokeHeight: DrandMainnet,
+	0: DrandIncentinet,
 }
 
-const UpgradeBreezeHeight = 41280
+const UpgradeCreeperHeight = 54720
+const UpgradeBreezeHeight = 51910
 const BreezeGasTampingDuration = 120
+const RcPos = -2640
 
-const UpgradeSmokeHeight = 51000
+const UpgradeSmokeHeight = 72070
 
-const UpgradeIgnitionHeight = 94000
-const UpgradeRefuelHeight = 130800
+const UpgradeIgnitionHeight = 118150
+const UpgradeRefuelHeight = 132550
+const AmplifierHeight = 172870
 
-var UpgradeActorsV2Height = abi.ChainEpoch(138720)
+var UpgradeActorsV2Height = abi.ChainEpoch(10_000_001)
 
 const UpgradeTapeHeight = 140760
 
 // This signals our tentative epoch for mainnet launch. Can make it later, but not earlier.
 // Miners, clients, developers, custodians all need time to prepare.
 // We still have upgrades and state changes to do, but can happen after signaling timing here.
-const UpgradeLiftoffHeight = 148888
+const UpgradeLiftoffHeight = 10_000_002
 
 const UpgradeKumquatHeight = 170000
 
@@ -42,7 +45,13 @@ const UpgradeCalicoHeight = 265200
 const UpgradePersianHeight = UpgradeCalicoHeight + (builtin2.EpochsInHour * 60)
 
 func init() {
-	policy.SetConsensusMinerMinPower(abi.NewStoragePower(10 << 40))
+	miner0.UpgradeRcHeight = UpgradeBreezeHeight + RcPos
+	miner0.InitialPleFactorHeight = AmplifierHeight
+	policy.SetConsensusMinerMinPower(abi.NewStoragePower(20 << 30))
+	policy.SetSupportedProofTypes(
+		abi.RegisteredSealProof_StackedDrg16GiBV1,
+		abi.RegisteredSealProof_StackedDrg4GiBV1,
+	)
 
 	if os.Getenv("LOTUS_USE_TEST_ADDRESSES") != "1" {
 		SetAddressNetwork(address.Mainnet)

@@ -16,6 +16,7 @@ import (
 	"github.com/filecoin-project/go-fil-markets/storagemarket"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/lotus/chain/types"
+	sectorstorage "github.com/filecoin-project/lotus/extern/sector-storage"
 	"github.com/filecoin-project/lotus/extern/sector-storage/fsutil"
 	"github.com/filecoin-project/lotus/extern/sector-storage/stores"
 	"github.com/filecoin-project/lotus/extern/sector-storage/storiface"
@@ -69,6 +70,9 @@ type StorageMiner interface {
 	WorkerStats(context.Context) (map[uuid.UUID]storiface.WorkerStats, error)
 	WorkerJobs(context.Context) (map[uuid.UUID][]storiface.WorkerJob, error)
 	storiface.WorkerReturn
+
+	GetWorker(ctx context.Context) (map[uint64]sectorstorage.WorkerInfo, error)
+	SetWorkerParam(ctx context.Context, worker uint64, key string, value string) error
 
 	// SealingSchedDiag dumps internal sealing scheduler state
 	SealingSchedDiag(ctx context.Context, doSched bool) (interface{}, error)

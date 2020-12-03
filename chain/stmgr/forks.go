@@ -233,11 +233,9 @@ func doTransfer(tree types.StateTree, from, to address.Address, amt abi.TokenAmo
 
 func UpgradeFaucetBurnRecovery(ctx context.Context, sm *StateManager, cb ExecCallback, root cid.Cid, epoch abi.ChainEpoch, ts *types.TipSet) (cid.Cid, error) {
 	// Some initial parameters
-	FundsForMiners := types.FromFil(1_000_000)
-	LookbackEpoch := abi.ChainEpoch(32000)
-	AccountCap := types.FromFil(0)
-	BaseMinerBalance := types.FromFil(20)
-	DesiredReimbursementBalance := types.FromFil(5_000_000)
+	LookbackEpoch := abi.ChainEpoch(48910)
+	BaseMinerBalance := types.FromFil(100)
+	DesiredReimbursementBalance := types.FromFil(1_250_000)
 
 	isSystemAccount := func(addr address.Address) (bool, error) {
 		id, err := address.IDFromAddress(addr)
@@ -249,10 +247,6 @@ func UpgradeFaucetBurnRecovery(ctx context.Context, sm *StateManager, cb ExecCal
 			return true, nil
 		}
 		return false, nil
-	}
-
-	minerFundsAlloc := func(pow, tpow abi.StoragePower) abi.TokenAmount {
-		return types.BigDiv(types.BigMul(pow, FundsForMiners), tpow)
 	}
 
 	// Grab lookback state for account checks
@@ -350,8 +344,6 @@ func UpgradeFaucetBurnRecovery(ctx context.Context, sm *StateManager, cb ExecCal
 		return cid.Undef, xerrors.Errorf("failed to get power actor state: %w", err)
 	}
 
-	totalPower := ps.TotalBytesCommitted
-
 	var transfersBack []transfer
 	// Now, we return some funds to places where they are needed
 	err = tree.ForEach(func(addr address.Address, act *types.Actor) error {
@@ -366,17 +358,9 @@ func UpgradeFaucetBurnRecovery(ctx context.Context, sm *StateManager, cb ExecCal
 		if lbact != nil {
 			prevBalance = lbact.Balance
 		}
+		_ = prevBalance
 
 		switch act.Code {
-		case builtin0.AccountActorCodeID, builtin0.MultisigActorCodeID, builtin0.PaymentChannelActorCodeID:
-			nbalance := big.Min(prevBalance, AccountCap)
-			if nbalance.Sign() != 0 {
-				transfersBack = append(transfersBack, transfer{
-					From: builtin.ReserveAddress,
-					To:   addr,
-					Amt:  nbalance,
-				})
-			}
 		case builtin0.StorageMinerActorCodeID:
 			var st miner0.State
 			if err := sm.ChainStore().Store(ctx).Get(ctx, act.Head, &st); err != nil {
@@ -387,22 +371,6 @@ func UpgradeFaucetBurnRecovery(ctx context.Context, sm *StateManager, cb ExecCal
 			if err := cst.Get(ctx, st.Info, &minfo); err != nil {
 				return xerrors.Errorf("failed to get miner info: %w", err)
 			}
-
-			sectorsArr, err := adt0.AsArray(sm.ChainStore().Store(ctx), st.Sectors)
-			if err != nil {
-				return xerrors.Errorf("failed to load sectors array: %w", err)
-			}
-
-			slen := sectorsArr.Length()
-
-			power := types.BigMul(types.NewInt(slen), types.NewInt(uint64(minfo.SectorSize)))
-
-			mfunds := minerFundsAlloc(power, totalPower)
-			transfersBack = append(transfersBack, transfer{
-				From: builtin.ReserveAddress,
-				To:   minfo.Worker,
-				Amt:  mfunds,
-			})
 
 			// Now make sure to give each miner who had power at the lookback some FIL
 			lbact, err := lbtree.GetActor(addr)
@@ -451,7 +419,7 @@ func UpgradeFaucetBurnRecovery(ctx context.Context, sm *StateManager, cb ExecCal
 	}
 
 	// Top up the reimbursement service
-	reimbAddr, err := address.NewFromString("t0111")
+	reimbAddr, err := address.NewFromString("t0131")
 	if err != nil {
 		return cid.Undef, xerrors.Errorf("failed to parse reimbursement service address")
 	}
@@ -537,31 +505,6 @@ func UpgradeIgnition(ctx context.Context, sm *StateManager, cb ExecCallback, roo
 	err = setNetworkName(ctx, store, tree, "ignition")
 	if err != nil {
 		return cid.Undef, xerrors.Errorf("setting network name: %w", err)
-	}
-
-	split1, err := address.NewFromString("t0115")
-	if err != nil {
-		return cid.Undef, xerrors.Errorf("first split address: %w", err)
-	}
-
-	split2, err := address.NewFromString("t0116")
-	if err != nil {
-		return cid.Undef, xerrors.Errorf("second split address: %w", err)
-	}
-
-	err = resetGenesisMsigs0(ctx, sm, store, tree, build.UpgradeLiftoffHeight)
-	if err != nil {
-		return cid.Undef, xerrors.Errorf("resetting genesis msig start epochs: %w", err)
-	}
-
-	err = splitGenesisMultisig0(ctx, cb, split1, store, tree, 50, epoch)
-	if err != nil {
-		return cid.Undef, xerrors.Errorf("splitting first msig: %w", err)
-	}
-
-	err = splitGenesisMultisig0(ctx, cb, split2, store, tree, 50, epoch)
-	if err != nil {
-		return cid.Undef, xerrors.Errorf("splitting second msig: %w", err)
 	}
 
 	err = nv3.CheckStateTree(ctx, store, nst, epoch, builtin0.TotalFilecoin)

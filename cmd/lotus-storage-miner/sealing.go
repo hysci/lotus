@@ -29,6 +29,8 @@ var sealingCmd = &cli.Command{
 		sealingWorkersCmd,
 		sealingSchedDiagCmd,
 		sealingAbortCmd,
+
+		setWorkerParamsCmd,
 	},
 }
 
@@ -50,6 +52,11 @@ var sealingWorkersCmd = &cli.Command{
 		ctx := lcli.ReqContext(cctx)
 
 		stats, err := nodeApi.WorkerStats(ctx)
+		if err != nil {
+			return err
+		}
+
+		Info, err := nodeApi.GetWorker(ctx)
 		if err != nil {
 			return err
 		}
@@ -116,6 +123,15 @@ var sealingWorkersCmd = &cli.Command{
 
 			for _, gpu := range stat.Info.Resources.GPUs {
 				fmt.Printf("\tGPU: %s\n", color.New(gpuCol).Sprintf("%s, %sused", gpu, gpuUse))
+			}
+			if _, ok := Info[stat.id]; ok {
+				fmt.Printf("\tGroup: %v\n", color.RedString(Info[stat.id].Group))
+				fmt.Printf("\tAcceptTasks: %v\n", Info[stat.id].AcceptTasks)
+				fmt.Printf("\tPreCommit1Max: %d\tPreCommit2Max: %d\tCommitMax: %d\n", Info[stat.id].PreCommit1Max, Info[stat.id].PreCommit2Max, Info[stat.id].CommitMax)
+				fmt.Printf("\tPreCommit1Now: %d\tPreCommit2Now: %d\tCommitNow: %d\n", Info[stat.id].PreCommit1Now, Info[stat.id].PreCommit2Now, Info[stat.id].CommitNow)
+				for ID, task := range Info[stat.id].StoreList {
+					fmt.Printf("\tProcessing: %s \t%s\n", color.BlueString(ID), color.RedString(task))
+				}
 			}
 		}
 
@@ -303,5 +319,31 @@ var sealingAbortCmd = &cli.Command{
 		fmt.Printf("aborting job %s, task %s, sector %d, running on host %s\n", job.ID.String(), job.Task.Short(), job.Sector.Number, job.Hostname)
 
 		return nodeApi.SealingAbort(ctx, job.ID)
+	},
+}
+
+var setWorkerParamsCmd = &cli.Command{
+	Name:  "setworkerparam",
+	Usage: "set worker param",
+	Flags: []cli.Flag{
+		&cli.Uint64Flag{
+			Name: "worker",
+		},
+		&cli.StringFlag{
+			Name: "key",
+		},
+		&cli.StringFlag{
+			Name: "value",
+		},
+	},
+	Action: func(cctx *cli.Context) error {
+		nodeApi, closer, err := lcli.GetStorageMinerAPI(cctx)
+		if err != nil {
+			return err
+		}
+		defer closer()
+
+		ctx := lcli.ReqContext(cctx)
+		return nodeApi.SetWorkerParam(ctx, cctx.Uint64("worker"), cctx.String("key"), cctx.String("value"))
 	},
 }

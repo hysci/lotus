@@ -9,6 +9,7 @@ import (
 	"github.com/filecoin-project/go-bitfield"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/big"
+	"github.com/prometheus/common/log"
 	"github.com/urfave/cli/v2"
 
 	miner2 "github.com/filecoin-project/specs-actors/v2/actors/builtin/miner"
@@ -53,12 +54,14 @@ var terminateSectorCmd = &cli.Command{
 			return err
 		}
 		defer closer()
+		log.Info("1")
 
 		api, acloser, err := lcli.GetStorageMinerAPI(cctx)
 		if err != nil {
 			return err
 		}
 		defer acloser()
+		log.Info("2")
 
 		ctx := lcli.ReqContext(cctx)
 
@@ -73,6 +76,7 @@ var terminateSectorCmd = &cli.Command{
 		}
 
 		terminationDeclarationParams := []miner2.TerminationDeclaration{}
+		terminationDeclarationParams := []miner.TerminationDeclaration{}
 
 		for _, sn := range cctx.Args().Slice() {
 			sectorNum, err := strconv.ParseUint(sn, 10, 64)
