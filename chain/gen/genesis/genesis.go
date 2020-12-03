@@ -517,7 +517,7 @@ func MakeGenesisBlock(ctx context.Context, bs bstore.Blockstore, sys vm.SyscallB
 		VRFProof: tickBuf,
 	}
 
-	filecoinGenesisCid, err := cid.Decode("bafyreiaqpwbbyjo4a42saasj36kkrpv4tsherf2e7bvezkert2a7dhonoi")
+	filecoinGenesisCid, err := cid.Decode("bafyreicp5uqyqbdn6jy7gnmidxn4ynr7beojipkgjjnqdgnwjv7bxjsqsq")
 	if err != nil {
 		return nil, xerrors.Errorf("failed to decode filecoin genesis block CID: %w", err)
 	}

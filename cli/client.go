@@ -795,7 +795,7 @@ var clientRetrieveCmd = &cli.Command{
 		},
 		&cli.StringFlag{
 			Name:  "maxPrice",
-			Usage: fmt.Sprintf("maximum price the client is willing to consider (default: %d FIL)", DefaultMaxRetrievePrice),
+			Usage: fmt.Sprintf("maximum price the client is willing to consider (default: %d FIC)", DefaultMaxRetrievePrice),
 		},
 		&cli.StringFlag{
 			Name:  "pieceCid",

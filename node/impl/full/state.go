@@ -915,7 +915,7 @@ func (a *StateAPI) StateMinerPreCommitDepositForPower(ctx context.Context, maddr
 		return types.EmptyInt, xerrors.Errorf("loading reward actor state: %w", err)
 	}
 
-	deposit, err := rewardState.PreCommitDepositForPower(powerSmoothed, sectorWeight)
+	deposit, err := rewardState.PreCommitDepositForPower(powerSmoothed, sectorWeight, ts.Height())
 	if err != nil {
 		return big.Zero(), xerrors.Errorf("calculating precommit deposit: %w", err)
 	}
@@ -992,6 +992,7 @@ func (a *StateAPI) StateMinerInitialPledgeCollateral(ctx context.Context, maddr 
 		pledgeCollateral,
 		&powerSmoothed,
 		circSupply.FilCirculating,
+		ts.Height(),
 	)
 	if err != nil {
 		return big.Zero(), xerrors.Errorf("calculating initial pledge: %w", err)

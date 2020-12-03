@@ -14,9 +14,9 @@ type FIL BigInt
 func (f FIL) String() string {
 	r := new(big.Rat).SetFrac(f.Int, big.NewInt(int64(build.FilecoinPrecision)))
 	if r.Sign() == 0 {
-		return "0 FIL"
+		return "0 FIC"
 	}
-	return strings.TrimRight(strings.TrimRight(r.FloatString(18), "0"), ".") + " FIL"
+	return strings.TrimRight(strings.TrimRight(r.FloatString(18), "0"), ".") + " FIC"
 }
 
 func (f FIL) Format(s fmt.State, ch rune) {
@@ -49,7 +49,7 @@ func ParseFIL(s string) (FIL, error) {
 	if suffix != "" {
 		norm := strings.ToLower(strings.TrimSpace(suffix))
 		switch norm {
-		case "", "fil":
+		case "", "fic":
 		case "attofil", "afil":
 			attofil = true
 		default:

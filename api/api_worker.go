@@ -13,6 +13,8 @@ import (
 	"github.com/filecoin-project/specs-storage/storage"
 
 	"github.com/filecoin-project/lotus/build"
+
+	sectorstorage "github.com/filecoin-project/lotus/extern/sector-storage"
 )
 
 type WorkerAPI interface {
@@ -37,4 +39,18 @@ type WorkerAPI interface {
 	Fetch(context.Context, abi.SectorID, stores.SectorFileType, stores.PathType, stores.AcquireMode) error
 
 	Closing(context.Context) (<-chan struct{}, error)
+
+	AllowableRange(ctx context.Context, task sealtasks.TaskType) (bool, error)
+
+	AddRange(ctx context.Context, task sealtasks.TaskType, addType int) error
+
+	GetWorkerInfo(ctx context.Context) sectorstorage.WorkerInfo
+
+	AddStore(ctx context.Context, ID abi.SectorID, taskType sealtasks.TaskType) error
+
+	DeleteStore(ctx context.Context, ID abi.SectorID, taskType sealtasks.TaskType) error
+
+	SetWorkerParams(ctx context.Context, key string, val string) error
+
+	GetWorkerGroup(ctx context.Context) string
 }
