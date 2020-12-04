@@ -50,7 +50,9 @@ func ParseFIL(s string) (FIL, error) {
 		norm := strings.ToLower(strings.TrimSpace(suffix))
 		switch norm {
 		case "", "fic":
-		case "attofil", "afil":
+		case "attofil", "afic":
+			attofil = true
+		case "attofic", "afil":
 			attofil = true
 		default:
 			return FIL{}, fmt.Errorf("unrecognized suffix: %q", suffix)
@@ -71,7 +73,7 @@ func ParseFIL(s string) (FIL, error) {
 		if attofil {
 			pref = "atto"
 		}
-		return FIL{}, fmt.Errorf("invalid %sFIL value: %q", pref, s)
+		return FIL{}, fmt.Errorf("invalid %sFIC value: %q", pref, s)
 	}
 
 	return FIL{r.Num()}, nil

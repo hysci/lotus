@@ -161,12 +161,12 @@ var runCmd = &cli.Command{
 		},
 		&cli.Int64Flag{
 			Name:  "commitmax",
-			Usage: "Allow the maximum number of simultaneous tasks for commit1, default value: 0",
+			Usage: "Allow the maximum number of simultaneous tasks for commit2, default value: 0",
 			Value: 0,
 		},
 		&cli.StringFlag{
 			Name:  "group",
-			Usage: "Allow the maximum number of simultaneous tasks for commit2, default value: 65535",
+			Usage: "Worker grouping function, default value: all",
 			Value: "all",
 		},
 	},
@@ -377,7 +377,7 @@ var runCmd = &cli.Command{
 				CommitMax:     cctx.Int64("commitmax"),
 				Group:         cctx.String("group"),
 
-				NoSwap:    cctx.Bool("no-swap"),
+				NoSwap: cctx.Bool("no-swap"),
 			}, remote, localStore, nodeApi),
 			localStore: localStore,
 			ls:         lr,

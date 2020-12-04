@@ -27,22 +27,22 @@ Please send an email to security@filecoin.org. See our [security policy](SECURIT
 ## Development
 
 The main branches under development at the moment are:
-* [`master`](https://github.com/filecoin-project/lotus): current testnet.
-* [`next`](https://github.com/filecoin-project/lotus/tree/next): working branch with chain-breaking changes.
-* [`ntwk-calibration`](https://github.com/filecoin-project/lotus/tree/ntwk-calibration): devnet running one of `next` commits.
+* [`master`](https://github.com/filecash/lotus): current testnet.
+* [`next`](https://github.com/filecash/lotus/tree/next): working branch with chain-breaking changes.
+* [`ntwk-calibration`](https://github.com/filecash/lotus/tree/ntwk-calibration): devnet running one of `next` commits.
 
 ### Tracker
 
-All work is tracked via issues. An attempt at keeping an up-to-date view on remaining work towards Mainnet launch can be seen at the [lotus github project board](https://github.com/orgs/filecoin-project/projects/8). The issues labeled with `incentives` are there to identify the issues needed for Space Race launch.
+All work is tracked via issues. An attempt at keeping an up-to-date view on remaining work towards Mainnet launch can be seen at the [lotus github project board](https://github.com/orgs/filecash/projects/8). The issues labeled with `incentives` are there to identify the issues needed for Space Race launch.
 
 ### Packages
 
 The lotus Filecoin implementation unfolds into the following packages:
 
-- [This repo](https://github.com/filecoin-project/lotus)
-- [go-fil-markets](https://github.com/filecoin-project/go-fil-markets) which has its own [kanban work tracker available here](https://app.zenhub.com/workspaces/markets-shared-components-5daa144a7046a60001c6e253/board)
-- [spec-actors](https://github.com/filecoin-project/specs-actors) which has its own [kanban work tracker available here](https://app.zenhub.com/workspaces/actors-5ee6f3aa87591f0016c05685/board)
+- [This repo](https://github.com/filecash/lotus)
+- [go-fil-markets](https://github.com/filecash/go-fil-markets) which has its own [kanban work tracker available here](https://app.zenhub.com/workspaces/markets-shared-components-5daa144a7046a60001c6e253/board)
+- [spec-actors](https://github.com/filecash/specs-actors) which has its own [kanban work tracker available here](https://app.zenhub.com/workspaces/actors-5ee6f3aa87591f0016c05685/board)
 
 ## License
 
-Dual-licensed under [MIT](https://github.com/filecoin-project/lotus/blob/master/LICENSE-MIT) + [Apache 2.0](https://github.com/filecoin-project/lotus/blob/master/LICENSE-APACHE)
+Dual-licensed under [MIT](https://github.com/filecash/lotus/blob/master/LICENSE-MIT) + [Apache 2.0](https://github.com/filecash/lotus/blob/master/LICENSE-APACHE)
