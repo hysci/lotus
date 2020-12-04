@@ -83,7 +83,6 @@ type sectorGroup struct {
 	group map[abi.SectorID]string
 }
 
-
 type workerHandle struct {
 	w Worker
 
@@ -160,7 +159,6 @@ func newScheduler(spt abi.RegisteredSealProof) *scheduler {
 		execSectorWorker: sectorGroup{
 			group: map[abi.SectorID]string{},
 		},
-
 
 		watchClosing:  make(chan WorkerID),
 		workerClosing: make(chan WorkerID),
@@ -378,7 +376,7 @@ func (sh *scheduler) trySched() {
 					if exist && sectorGroup != "all" {
 						workerGroup := worker.w.GetWorkerGroup(task.ctx)
 						if workerGroup != sectorGroup {
-							fmt.Printf("sectorGroup does not match workerGroup, sectorid: %v, sectorGroup: %s, workerGroup: %s, taskType: %s \n", task.sector, sectorGroup, workerGroup, task.taskType)
+							log.Infof("sectorGroup does not match workerGroup, sectorid: %v, sectorGroup: %s, workerGroup: %s, taskType: %s \n", task.sector, sectorGroup, workerGroup, task.taskType)
 							continue
 						}
 					}
@@ -467,8 +465,6 @@ func (sh *scheduler) trySched() {
 			if !windows[wnd].allocated.canHandleRequest(needRes, wid, "schedAssign", wr) {
 				continue
 			}
-
-			log.Infof("调度分配任务：%v, 给worker: %s", task.sector, worker.info.Hostname)
 
 			err = worker.w.AddRange(task.ctx, task.taskType, 1)
 			if err != nil {
@@ -728,8 +724,6 @@ func (sh *scheduler) assignWorker(taskDone chan struct{}, wid WorkerID, w *worke
 	w.preparing.add(w.info.Resources, needRes)
 	w.lk.Unlock()
 
-	log.Infof("worker: %s, 开始执行任务: %v", w.info.Hostname, req.sector)
-
 	go func() {
 		err := req.prepare(req.ctx, w.wt.worker(w.w))
 		sh.workersLk.Lock()
@@ -787,7 +781,6 @@ func (sh *scheduler) assignWorker(taskDone chan struct{}, wid WorkerID, w *worke
 		_ = w.w.AddRange(req.ctx, req.taskType, 2)
 		_ = w.w.DeleteStore(req.ctx, req.sector, req.taskType)
 		w.lk.Unlock()
-		log.Infof("worker: %s, 完成任务: %v", w.info.Hostname, req.sector)
 
 		if req.taskType == sealtasks.TTFetch {
 			sh.execSectorWorker.lk.Lock()

@@ -57,7 +57,7 @@ type LocalWorker struct {
 }
 
 type taskList struct {
-	lk sync.Mutex
+	lk   sync.Mutex
 	list map[abi.SectorID]string
 }
 
@@ -98,7 +98,7 @@ func NewLocalWorker(wcfg WorkerConfig, store stores.Store, local *stores.Local, 
 		preCommit2Max: wcfg.PreCommit2Max,
 		commitMax:     wcfg.CommitMax,
 		group:         wcfg.Group,
-		storeList:     taskList{
+		storeList: taskList{
 			list: make(map[abi.SectorID]string),
 		},
 	}
@@ -445,7 +445,6 @@ func (l *LocalWorker) GetWorkerInfo(ctx context.Context) WorkerInfo {
 	return workerInfo
 }
 func (l *LocalWorker) AddStore(ctx context.Context, ID abi.SectorID, taskType sealtasks.TaskType) error {
-	log.Infof("增加一个任务list:%v", ID)
 	l.storeList.lk.Lock()
 	l.storeList.list[ID] = sealtasks.TaskMean[taskType]
 	l.storeList.lk.Unlock()
@@ -454,8 +453,7 @@ func (l *LocalWorker) AddStore(ctx context.Context, ID abi.SectorID, taskType se
 func (l *LocalWorker) DeleteStore(ctx context.Context, ID abi.SectorID, taskType sealtasks.TaskType) error {
 	l.storeList.lk.Lock()
 	info, exit := l.storeList.list[ID]
-	if exit && info == sealtasks.TaskMean[taskType]{
-		log.Infof("删除一个任务list:%v", ID)
+	if exit && info == sealtasks.TaskMean[taskType] {
 		delete(l.storeList.list, ID)
 	}
 	l.storeList.lk.Unlock()
