@@ -17,7 +17,7 @@ MODULES:=
 CLEAN:=
 BINS:=
 
-ldflags=-X=github.com/filecoin-project/lotus/build.CurrentCommit=+git.$(subst -,.,$(shell git describe --always --match=NeVeRmAtCh --dirty 2>/dev/null || git rev-parse --short HEAD 2>/dev/null))
+ldflags=-X=github.com/filecoin-project/lotus/build.CurrentCommit=+git.$(subst -,.,$(shell git describe --always --match=NeVeRmAtCh 2>/dev/null || git rev-parse --short HEAD 2>/dev/null))
 ifneq ($(strip $(LDFLAGS)),)
 	ldflags+=-extldflags=$(LDFLAGS)
 endif
@@ -27,7 +27,7 @@ GOFLAGS+=-ldflags="$(ldflags)"
 
 ## FFI
 
-FFI_PATH:=extern/filecoin-ffi/
+FFI_PATH:=../filecoin-ffi/
 FFI_DEPS:=.install-filcrypto
 FFI_DEPS:=$(addprefix $(FFI_PATH),$(FFI_DEPS))
 
@@ -54,7 +54,14 @@ build/.update-modules:
 
 CLEAN+=build/.update-modules
 
+DEPS_OPT:
+	cp -rf ../filecoin-ffi/filcrypto.pc ./extern/filecoin-ffi
+	cp -rf ../filecoin-ffi/filcrypto.h ./extern/filecoin-ffi
+	cp -rf ../filecoin-ffi/libfilcrypto.a ./extern/filecoin-ffi
+
 deps: $(BUILD_DEPS)
+
+
 .PHONY: deps
 
 debug: GOFLAGS+=-tags=debug
@@ -63,7 +70,7 @@ debug: lotus lotus-miner lotus-worker lotus-seed
 2k: GOFLAGS+=-tags=2k
 2k: lotus lotus-miner lotus-worker lotus-seed
 
-lotus: $(BUILD_DEPS)
+lotus: $(BUILD_DEPS) DEPS_OPT
 	rm -f lotus
 	go build $(GOFLAGS) -o lotus ./cmd/lotus
 	go run github.com/GeertJohan/go.rice/rice append --exec lotus -i ./build
@@ -71,32 +78,26 @@ lotus: $(BUILD_DEPS)
 .PHONY: lotus
 BINS+=lotus
 
-lotus-miner: $(BUILD_DEPS)
+lotus-miner: $(BUILD_DEPS) DEPS_OPT
 	rm -f lotus-miner
 	go build $(GOFLAGS) -o lotus-miner ./cmd/lotus-storage-miner
 	go run github.com/GeertJohan/go.rice/rice append --exec lotus-miner -i ./build
 .PHONY: lotus-miner
 BINS+=lotus-miner
 
-lotus-worker: $(BUILD_DEPS)
+lotus-worker: $(BUILD_DEPS) DEPS_OPT
 	rm -f lotus-worker
 	go build $(GOFLAGS) -o lotus-worker ./cmd/lotus-seal-worker
 	go run github.com/GeertJohan/go.rice/rice append --exec lotus-worker -i ./build
 .PHONY: lotus-worker
 BINS+=lotus-worker
 
-lotus-shed: $(BUILD_DEPS)
+lotus-shed: $(BUILD_DEPS) DEPS_OPT
 	rm -f lotus-shed
 	go build $(GOFLAGS) -o lotus-shed ./cmd/lotus-shed
 	go run github.com/GeertJohan/go.rice/rice append --exec lotus-shed -i ./build
 .PHONY: lotus-shed
 BINS+=lotus-shed
-
-lotus-gateway: $(BUILD_DEPS)
-	rm -f lotus-gateway
-	go build $(GOFLAGS) -o lotus-gateway ./cmd/lotus-gateway
-.PHONY: lotus-gateway
-BINS+=lotus-gateway
 
 build: lotus lotus-miner lotus-worker
 	@[[ $$(type -P "lotus") ]] && echo "Caution: you have \
@@ -117,19 +118,12 @@ install-worker:
 
 # TOOLS
 
-full: lotus lotus-miner lotus-worker lotus-seed lotus-bench benchmarks lotus-fountain lotus-stats lotus-health
-	@[[ $$(type -P "lotus") ]] && echo "Caution: you have \
-an existing lotus binary in your PATH. This may cause problems if you don't run 'sudo make install'" || true
-.PHONY: full
-
-
 lotus-checker: $(BUILD_DEPS) DEPS_OPT
 	rm -f lotus-checker
 	go build $(GOFLAGS) -o lotus-checker ./cmd/sector-checker
 	go run github.com/GeertJohan/go.rice/rice append --exec lotus-checker -i ./build
 .PHONY: lotus-checker
 BINS+=lotus-checker
-
 
 lotus-seed: $(BUILD_DEPS)
 	rm -f lotus-seed
@@ -141,8 +135,9 @@ BINS+=lotus-seed
 
 benchmarks:
 	go run github.com/whyrusleeping/bencher ./... > bench.json
-	#@echo Submitting results
-    #@curl -X POST 'http://benchmark.kittyhawk.wtf/benchmark' -d '@bench.json' -u "${benchmark_http_cred}"
+	@echo Submitting results
+	@curl -X POST 'http://benchmark.kittyhawk.wtf/benchmark' -d '@bench.json' -u "${benchmark_http_cred}"
+.PHONY: benchmarks
 
 lotus-pond: 2k
 	go build -o lotus-pond ./lotuspond
