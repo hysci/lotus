@@ -238,18 +238,19 @@ var sealBenchCmd = &cli.Command{
 						if err != nil {
 							fmt.Print(err.Error(), " ##################### ")
 							if len(ps) > 0 {
-								fmt.Print("Number:\n")
-								fmt.Print(ps[0].Number)
-								fmt.Print("\n" + "Miner")
+								fmt.Print("  Miner:")
 								fmt.Print(ps[0].Miner)
+								fmt.Print("  Number:")
+								fmt.Print(ps[0].Number)
+								fmt.Print("\n")
 							}
-
 						} else {
 							if len(ps) > 0 {
-								fmt.Print("Number:\n")
-								fmt.Print(ps[0].Number)
-								fmt.Print("\n" + "Miner")
+								fmt.Print("  Miner:")
 								fmt.Print(ps[0].Miner)
+								fmt.Print("  Number:")
+								fmt.Print(ps[0].Number)
+								fmt.Print("\n")
 							}
 						}
 						log.Info(" \n  mid: ", mid.String(), " \n  SectorID: ", i.SectorNumber, "\n  SealedCID: ", i.SealedCID.String(), " <<<<<")
@@ -279,20 +280,22 @@ var sealBenchCmd = &cli.Command{
 				li := []saproof.SectorInfo{i}
 				wproof1, ps, err := sb.GenerateWindowPoSt(context.TODO(), mid, li, challenge[:])
 				if err != nil {
-					fmt.Print(err.Error(), "\n ##################### ")
+					fmt.Print(err.Error(), " ##################### ")
 					if len(ps) > 0 {
-						fmt.Print("Number:\n")
-						fmt.Print(ps[0].Number)
-						fmt.Print("\n" + "Miner")
+						fmt.Print("  Miner:")
 						fmt.Print(ps[0].Miner)
+						fmt.Print("  Number:")
+						fmt.Print(ps[0].Number)
+						fmt.Print("\n")
 					}
 
 				} else {
 					if len(ps) > 0 {
-						fmt.Print("Number:\n")
-						fmt.Print(ps[0].Number)
-						fmt.Print("\n" + "Miner\n")
+						fmt.Print("  Miner:")
 						fmt.Print(ps[0].Miner)
+						fmt.Print("  Number:")
+						fmt.Print(ps[0].Number)
+						fmt.Print("\n")
 					}
 				}
 				log.Info(" \n mid:", mid.String(), " \n SectorID:", i.SectorNumber, " \n SealedCID: ", i.SealedCID.String(), "\n <<<<<")
