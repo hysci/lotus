@@ -470,31 +470,6 @@ func UpgradeIgnition(ctx context.Context, sm *StateManager, cb ExecCallback, roo
 		return cid.Undef, xerrors.Errorf("setting network name: %w", err)
 	}
 
-	split1, err := address.NewFromString("t0115")
-	if err != nil {
-		return cid.Undef, xerrors.Errorf("first split address: %w", err)
-	}
-
-	split2, err := address.NewFromString("t0116")
-	if err != nil {
-		return cid.Undef, xerrors.Errorf("second split address: %w", err)
-	}
-
-	err = resetGenesisMsigs(ctx, sm, store, tree, build.UpgradeLiftoffHeight)
-	if err != nil {
-		return cid.Undef, xerrors.Errorf("resetting genesis msig start epochs: %w", err)
-	}
-
-	err = splitGenesisMultisig(ctx, cb, split1, store, tree, 50)
-	if err != nil {
-		return cid.Undef, xerrors.Errorf("splitting first msig: %w", err)
-	}
-
-	err = splitGenesisMultisig(ctx, cb, split2, store, tree, 50)
-	if err != nil {
-		return cid.Undef, xerrors.Errorf("splitting second msig: %w", err)
-	}
-
 	err = nv3.CheckStateTree(ctx, store, nst, epoch, builtin0.TotalFilecoin)
 	if err != nil {
 		return cid.Undef, xerrors.Errorf("sanity check after ignition upgrade failed: %w", err)
@@ -509,16 +484,6 @@ func UpgradeRefuel(ctx context.Context, sm *StateManager, cb ExecCallback, root 
 	tree, err := sm.StateTree(root)
 	if err != nil {
 		return cid.Undef, xerrors.Errorf("getting state tree: %w", err)
-	}
-
-	addr, err := address.NewFromString("t0122")
-	if err != nil {
-		return cid.Undef, xerrors.Errorf("getting address: %w", err)
-	}
-
-	err = resetMultisigVesting(ctx, store, tree, addr, 0, 0, big.Zero())
-	if err != nil {
-		return cid.Undef, xerrors.Errorf("tweaking msig vesting: %w", err)
 	}
 
 	err = resetMultisigVesting(ctx, store, tree, builtin.ReserveAddress, 0, 0, big.Zero())
