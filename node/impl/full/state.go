@@ -25,6 +25,7 @@ import (
 	"github.com/filecoin-project/lotus/extern/sector-storage/ffiwrapper"
 
 	"github.com/filecoin-project/lotus/api"
+	"github.com/filecoin-project/lotus/build"
 	"github.com/filecoin-project/lotus/chain/actors/builtin/market"
 	"github.com/filecoin-project/lotus/chain/actors/builtin/miner"
 	"github.com/filecoin-project/lotus/chain/actors/builtin/multisig"
@@ -330,6 +331,25 @@ func (a *StateAPI) StateReplay(ctx context.Context, tsk types.TipSetKey, mc cid.
 	if err != nil {
 		return nil, xerrors.Errorf("loading tipset %s: %w", tsk, err)
 	}
+
+	if tsk == types.EmptyTSK {
+		var r *api.MsgLookup
+		r, err = a.StateWaitMsg(ctx, mc, build.MessageConfidence)
+		if err != nil {
+			return nil, xerrors.Errorf("finding message in chain: %w", err)
+		}
+
+		childTs, err := a.Chain.LoadTipSet(r.TipSet)
+		if err != nil {
+			return nil, xerrors.Errorf("finding message in chain: %w", err)
+		}
+
+		ts, err = a.Chain.LoadTipSet(childTs.Parents())
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	m, r, err := a.StateManager.Replay(ctx, ts, mc)
 	if err != nil {
 		return nil, err

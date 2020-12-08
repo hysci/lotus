@@ -460,10 +460,13 @@ var stateReplaySetCmd = &cli.Command{
 			return xerrors.Errorf("replay call failed: %w", err)
 		}
 
+		TotalCost := big.Sub(big.Mul(types.NewInt(uint64(res.Msg.GasLimit)), res.Msg.GasFeeCap), res.MsgRct.Refund)
+
 		fmt.Println("Replay receipt:")
 		fmt.Printf("Exit code: %d\n", res.MsgRct.ExitCode)
 		fmt.Printf("Return: %x\n", res.MsgRct.Return)
 		fmt.Printf("Gas Used: %d\n", res.MsgRct.GasUsed)
+		fmt.Printf("Total Cost: %s\n", TotalCost.String())
 		if res.MsgRct.ExitCode != 0 {
 			fmt.Printf("Error message: %q\n", res.Error)
 		}
