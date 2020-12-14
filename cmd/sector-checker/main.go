@@ -61,8 +61,8 @@ func main_exe() {
 	miner.SupportedProofTypes[abi.RegisteredSealProof_StackedDrg2KiBV1] = struct{}{}
 
 	app := &cli.App{
-		Name:    "filecash sector-check",
-		Usage:   "check window post",
+                Name:    "filecash-sector-checker",
+		Usage:   "check sector window post",
 		Version: build.UserVersion(),
 		Commands: []*cli.Command{
 			proveCmd,
@@ -81,6 +81,7 @@ func main_exe() {
 
 var sealBenchCmd = &cli.Command{
 	Name: "checking",
+	Usage: "filecash sector checker",
 	Flags: []cli.Flag{
 		&cli.StringFlag{
 			Name:  "storage-dir",
