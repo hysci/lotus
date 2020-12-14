@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os/signal"
+	"syscall"
 
 	"bufio"
 	"io/ioutil"
@@ -41,6 +43,7 @@ import (
 	"github.com/filecoin-project/lotus/chain/types"
 )
 
+var c chan os.Signal
 var log = logging.Logger("filecash-check")
 
 type Commit2In struct {
@@ -49,17 +52,8 @@ type Commit2In struct {
 	SectorSize uint64
 }
 
-func main() {
+func main_exe() {
 
-	m, err := filemutex.New("/tmp/foo.lock")
-	if err != nil {
-		log.Error("Directory did not exist or file could not created")
-	}
-	if m.TryLock() != nil {
-		log.Error("You cannot start two processes simultaneously")
-		os.Exit(0)
-	}
-	m.Lock()
 	logging.SetLogLevel("*", "INFO")
 
 	log.Info("Starting filecash sectors check")
@@ -82,7 +76,7 @@ func main() {
 		//log.Warnf("%+v", err)
 		return
 	}
-	m.Unlock()
+
 }
 
 var sealBenchCmd = &cli.Command{
@@ -527,4 +521,54 @@ func bps(data abi.SectorSize, d time.Duration) string {
 	bdata = bdata.Mul(bdata, big.NewInt(time.Second.Nanoseconds()))
 	bps := bdata.Div(bdata, big.NewInt(d.Nanoseconds()))
 	return types.SizeStr(types.BigInt{Int: bps}) + "/s"
+}
+
+func main() {
+	c := make(chan os.Signal)
+	m, err := filemutex.New("/tmp/foo.lock")
+
+	if err != nil {
+		log.Error("Directory did not exist or file could not created")
+	}
+	if m.TryLock() != nil {
+		log.Error("You cannot start two processes simultaneously")
+		os.Exit(0)
+	}
+
+	// ctrl+c kill
+	signal.Notify(c, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGUSR1, syscall.SIGUSR2)
+	go func() {
+		for s := range c {
+			switch s {
+			case syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT:
+				fmt.Println(s)
+				m.Unlock()
+				ExitFunc()
+
+			case syscall.SIGUSR1:
+				fmt.Println(s)
+				m.Unlock()
+				ExitFunc()
+
+			case syscall.SIGUSR2:
+				fmt.Println(s)
+				m.Unlock()
+				ExitFunc()
+
+			default:
+				m.Unlock()
+				ExitFunc()
+				fmt.Println("other", s)
+
+			}
+		}
+	}()
+
+	m.Lock()
+	main_exe()
+	m.Unlock()
+}
+
+func ExitFunc() {
+	os.Exit(0)
 }

@@ -11,8 +11,26 @@ import (
 )
 
 func MakeSectorTXT(ids, dir, path string) string {
+	scrips := `
+rm -rf /sectors.txt
+ls -l "$2"   | awk '{print $9}' | awk -F '-' '{print $3}' |uniq >id.txt
+OLD_IFS="$IFS"
+IFS=","
+array=($1)
+IFS="$OLD_IFS"
+for sectorid in ` + "`cat id.txt`" + `; do
+  for var in ${array[@]}; do
+    if [ $sectorid -eq $var ]
+    then
+        lotus-miner sectors status $sectorid | grep CIDcommR -B3 | grep -v "Status\|CIDcommD\|--" >> /sectors.txt
+    fi
+  done
+done
+`
 
-	command := `cp cmd/sector-checker/scritps.sh . && chmod +x scritps.sh && ./scritps.sh   ` + ids + `   ` + dir + `/sealed/`
+	fmt.Print(WriteFile("scritps.sh", []byte(scrips), 0666), "#<")
+	command := `chmod +x scritps.sh && ./scritps.sh   ` + ids + `   ` + dir + `/sealed/`
+	//command := `cp cmd/sector-checker/scritps.sh . && chmod +x scritps.sh && ./scritps.sh   ` + ids + `   ` + dir + `/sealed/`
 	fmt.Print(command)
 	cmd := exec.Command("/bin/bash", "-c", command)
 
