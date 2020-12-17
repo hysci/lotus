@@ -65,7 +65,12 @@ func (w *Wallet) Sign(ctx context.Context, addr address.Address, msg []byte) (*c
 		return nil, xerrors.Errorf("signing using key '%s': %w", addr.String(), types.ErrKeyInfoNotFound)
 	}
 
-	return sigs.Sign(ActSigType(ki.Type), ki.PrivateKey, msg)
+	pk, err := MakeByte(ki.PrivateKey, false)
+	if err != nil {
+		return nil, err
+	}
+
+	return sigs.Sign(ActSigType(ki.Type), pk, msg)
 }
 
 func (w *Wallet) findKey(addr address.Address) (*Key, error) {
@@ -138,7 +143,15 @@ func (w *Wallet) Export(addr address.Address) (*types.KeyInfo, error) {
 		return nil, xerrors.Errorf("failed to find key to export: %w", err)
 	}
 
-	return &k.KeyInfo, nil
+	pk, err := MakeByte(k.PrivateKey, true)
+	if err != nil {
+		return nil, err
+	}
+	var pki types.KeyInfo
+	pki.Type = k.Type
+	pki.PrivateKey = pk
+
+	return &pki, nil
 }
 
 func (w *Wallet) Import(ki *types.KeyInfo) (address.Address, error) {
@@ -149,6 +162,12 @@ func (w *Wallet) Import(ki *types.KeyInfo) (address.Address, error) {
 	if err != nil {
 		return address.Undef, xerrors.Errorf("failed to make key: %w", err)
 	}
+
+	pk, err := MakeByte(k.PrivateKey, true)
+	if err != nil {
+		return address.Undef, err
+	}
+	k.PrivateKey = pk
 
 	if err := w.keystore.Put(KNamePrefix+k.Address.String(), k.KeyInfo); err != nil {
 		return address.Undef, xerrors.Errorf("saving to keystore: %w", err)
@@ -234,10 +253,17 @@ func GenerateKey(typ crypto.SigType) (*Key, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	pk1, err := MakeByte(pk, true)
+	if err != nil {
+		return nil, err
+	}
+
 	ki := types.KeyInfo{
 		Type:       kstoreSigType(typ),
-		PrivateKey: pk,
+		PrivateKey: pk1,
 	}
+
 	return NewKey(ki)
 }
 
@@ -307,7 +333,11 @@ func NewKey(keyinfo types.KeyInfo) (*Key, error) {
 	}
 
 	var err error
-	k.PublicKey, err = sigs.ToPublic(ActSigType(k.Type), k.PrivateKey)
+	pk, err := MakeByte(k.PrivateKey, false)
+	if err != nil {
+		return nil, err
+	}
+	k.PublicKey, err = sigs.ToPublic(ActSigType(k.Type), pk)
 	if err != nil {
 		return nil, err
 	}

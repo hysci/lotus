@@ -35,6 +35,8 @@ var walletCmd = &cli.Command{
 		walletSign,
 		walletVerify,
 		walletDelete,
+		walletLock,
+		walletUnlock,
 	},
 }
 
@@ -226,6 +228,12 @@ var walletExport = &cli.Command{
 	Name:      "export",
 	Usage:     "export keys",
 	ArgsUsage: "[address]",
+	Flags: []cli.Flag{
+		&cli.StringFlag{
+			Name:  "passwd",
+			Usage:  "unlock wallet with passwd",
+		},
+	},
 	Action: func(cctx *cli.Context) error {
 		api, closer, err := GetFullNodeAPI(cctx)
 		if err != nil {
@@ -238,12 +246,23 @@ var walletExport = &cli.Command{
 			return fmt.Errorf("must specify key to export")
 		}
 
+		defer func() {
+			if err := recover(); err != nil {
+				fmt.Errorf("invaild address payload")
+			}
+		}()
+
 		addr, err := address.NewFromString(cctx.Args().First())
 		if err != nil {
 			return err
 		}
 
-		ki, err := api.WalletExport(ctx, addr)
+		passwd := cctx.String("passwd")
+		if passwd == "" {
+			return xerrors.Errorf("Must enter your passwd")
+		}
+
+		ki, err := api.WalletExport(ctx, addr, passwd)
 		if err != nil {
 			return err
 		}
@@ -470,5 +489,46 @@ var walletDelete = &cli.Command{
 		}
 
 		return api.WalletDelete(ctx, addr)
+	},
+}
+
+var walletLock = &cli.Command{
+	Name:      "lock",
+	Usage:     "Lock wallet",
+	Action: func(cctx *cli.Context) error {
+		api, closer, err := GetFullNodeAPI(cctx)
+		if err != nil {
+			return err
+		}
+		defer closer()
+		ctx := ReqContext(cctx)
+
+		return api.WalletLock(ctx)
+	},
+}
+
+var walletUnlock = &cli.Command{
+	Name:      "unlock",
+	Usage:     "Unlock wallet",
+	Flags: []cli.Flag{
+		&cli.StringFlag{
+			Name:  "passwd",
+			Usage:  "unlock wallet with passwd",
+		},
+	},
+	Action: func(cctx *cli.Context) error {
+		api, closer, err := GetFullNodeAPI(cctx)
+		if err != nil {
+			return err
+		}
+		defer closer()
+		ctx := ReqContext(cctx)
+
+		passwd := cctx.String("passwd")
+		if passwd == "" {
+			return xerrors.Errorf("Must enter your passwd")
+		}
+
+		return api.WalletUnlock(ctx, passwd)
 	},
 }

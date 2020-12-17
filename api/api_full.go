@@ -203,6 +203,8 @@ type FullNode interface {
 	// based on current chain conditions
 	MpoolPushMessage(ctx context.Context, msg *types.Message, spec *MessageSendSpec) (*types.SignedMessage, error)
 
+	MpoolPushMessage2(ctx context.Context, msg *types.Message, spec *MessageSendSpec, passwd string) (*types.SignedMessage, error)
+
 	// MpoolGetNonce gets next nonce for the specified sender.
 	// Note that this method may not be atomic. Use MpoolPushMessage instead.
 	MpoolGetNonce(context.Context, address.Address) (uint64, error)
@@ -237,6 +239,8 @@ type FullNode interface {
 	WalletSign(context.Context, address.Address, []byte) (*crypto.Signature, error)
 	// WalletSignMessage signs the given message using the given address.
 	WalletSignMessage(context.Context, address.Address, *types.Message) (*types.SignedMessage, error)
+	// WalletSignMessage signs the given message using the given address with password.
+	WalletSignMessage2(context.Context, address.Address, *types.Message, string) (*types.SignedMessage, error)
 	// WalletVerify takes an address, a signature, and some bytes, and indicates whether the signature is valid.
 	// The address does not have to be in the wallet.
 	WalletVerify(context.Context, address.Address, []byte, *crypto.Signature) (bool, error)
@@ -245,13 +249,17 @@ type FullNode interface {
 	// WalletSetDefault marks the given address as as the default one.
 	WalletSetDefault(context.Context, address.Address) error
 	// WalletExport returns the private key of an address in the wallet.
-	WalletExport(context.Context, address.Address) (*types.KeyInfo, error)
+	WalletExport(context.Context, address.Address, string) (*types.KeyInfo, error)
 	// WalletImport receives a KeyInfo, which includes a private key, and imports it into the wallet.
 	WalletImport(context.Context, *types.KeyInfo) (address.Address, error)
 	// WalletDelete deletes an address from the wallet.
 	WalletDelete(context.Context, address.Address) error
 	// WalletValidateAddress validates whether a given string can be decoded as a well-formed address
 	WalletValidateAddress(context.Context, string) (address.Address, error)
+	// WalletLock
+	WalletLock(context.Context) error
+	// WalletUnlock
+	WalletUnlock(context.Context, string) error
 
 	// Other
 

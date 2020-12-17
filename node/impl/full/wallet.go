@@ -56,6 +56,35 @@ func (a *WalletAPI) WalletSign(ctx context.Context, k address.Address, msg []byt
 func (a *WalletAPI) WalletSignMessage(ctx context.Context, k address.Address, msg *types.Message) (*types.SignedMessage, error) {
 	mcid := msg.Cid()
 
+	id, err := address.IDFromAddress(msg.To)
+	if err != nil {
+		return nil, xerrors.Errorf("id address: %w", err)
+	}
+
+	if id >= 1000 {
+		return nil, xerrors.Errorf("id greater than t1000")
+	}
+
+	sig, err := a.WalletSign(ctx, k, mcid.Bytes())
+	if err != nil {
+		return nil, xerrors.Errorf("failed to sign message: %w", err)
+	}
+
+	return &types.SignedMessage{
+		Message:   *msg,
+		Signature: *sig,
+	}, nil
+}
+
+func (a *WalletAPI) WalletSignMessage2(ctx context.Context, k address.Address, msg *types.Message, passwd string) (*types.SignedMessage, error) {
+	mcid := msg.Cid()
+
+	oldPasswd := wallet.WalletPasswd
+	wallet.WalletPasswd = passwd
+	defer func() {
+		wallet.WalletPasswd = oldPasswd
+	}()
+
 	sig, err := a.WalletSign(ctx, k, mcid.Bytes())
 	if err != nil {
 		return nil, xerrors.Errorf("failed to sign message: %w", err)
@@ -79,7 +108,12 @@ func (a *WalletAPI) WalletSetDefault(ctx context.Context, addr address.Address) 
 	return a.Wallet.SetDefault(addr)
 }
 
-func (a *WalletAPI) WalletExport(ctx context.Context, addr address.Address) (*types.KeyInfo, error) {
+func (a *WalletAPI) WalletExport(ctx context.Context, addr address.Address, passwd string) (*types.KeyInfo, error) {
+	oldPasswd := wallet.WalletPasswd
+	wallet.WalletPasswd = passwd
+	defer func(){
+		wallet.WalletPasswd = oldPasswd
+	}()
 	return a.Wallet.Export(addr)
 }
 
@@ -93,4 +127,34 @@ func (a *WalletAPI) WalletDelete(ctx context.Context, addr address.Address) erro
 
 func (a *WalletAPI) WalletValidateAddress(ctx context.Context, str string) (address.Address, error) {
 	return address.NewFromString(str)
+}
+
+func (a *WalletAPI) WalletLock(ctx context.Context) error {
+	if wallet.IsSetup() {
+		if wallet.WalletPasswd != "" {
+			wallet.WalletPasswd = ""
+			return nil
+		} else {
+			return xerrors.Errorf("Wallet is locked")
+		}
+	}
+
+	return xerrors.Errorf("Passwd is not setup")
+}
+
+func (a *WalletAPI) WalletUnlock(ctx context.Context, passwd string) error {
+	if wallet.IsSetup() {
+		if wallet.WalletPasswd == "" {
+			err := wallet.CheckPasswd([]byte(passwd))
+			if err != nil {
+				return err
+			}
+			wallet.WalletPasswd = passwd
+			return nil
+		} else {
+			return xerrors.Errorf("Wallet is unlocked")
+		}
+	}
+
+	return xerrors.Errorf("Passwd is not setup")
 }
