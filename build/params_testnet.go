@@ -29,6 +29,7 @@ const UpgradeSmokeHeight = 72070
 
 const UpgradeIgnitionHeight = 118150
 const UpgradeRefuelHeight = 132550
+const AmplifierHeight = 172870
 
 var UpgradeActorsV2Height = abi.ChainEpoch(10_000_001)
 
@@ -39,6 +40,7 @@ const UpgradeLiftoffHeight = 10_000_002
 
 func init() {
 	miner0.UpgradeRcHeight = UpgradeBreezeHeight + RcPos
+	miner0.InitialPleFactorHeight = AmplifierHeight
 	policy.SetConsensusMinerMinPower(abi.NewStoragePower(20 << 30))
 	policy.SetSupportedProofTypes(
 		abi.RegisteredSealProof_StackedDrg16GiBV1,

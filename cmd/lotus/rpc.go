@@ -28,7 +28,7 @@ import (
 
 var log = logging.Logger("main")
 
-func serveRPC(a api.FullNode, stop node.StopFunc, addr multiaddr.Multiaddr, shutdownCh <-chan struct{}) error {
+func serveRPC(a api.FullNode, stop node.StopFunc, addr multiaddr.Multiaddr, shutdownCh <-chan struct{}, isRecover *bool) error {
 	rpcServer := jsonrpc.NewServer()
 	rpcServer.Register("Filecoin", apistruct.PermissionedFullAPI(a))
 
@@ -90,6 +90,13 @@ func serveRPC(a api.FullNode, stop node.StopFunc, addr multiaddr.Multiaddr, shut
 		<-shutdownDone
 		return nil
 	}
+	defer func() {
+		if err := recover(); err != nil {
+			<-shutdownDone
+			*isRecover = true
+			log.Errorf("jsonrpc package is too big")
+		}
+	}()
 	return err
 }
 
