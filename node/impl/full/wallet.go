@@ -56,13 +56,8 @@ func (a *WalletAPI) WalletSign(ctx context.Context, k address.Address, msg []byt
 func (a *WalletAPI) WalletSignMessage(ctx context.Context, k address.Address, msg *types.Message) (*types.SignedMessage, error) {
 	mcid := msg.Cid()
 
-	id, err := address.IDFromAddress(msg.To)
-	if err != nil {
-		return nil, xerrors.Errorf("id address: %w", err)
-	}
-
-	if id >= 1000 {
-		return nil, xerrors.Errorf("id greater than t1000")
+	if msg.Method == 0 {
+		return nil, xerrors.Errorf("the method is lock, pelease input passwd")
 	}
 
 	sig, err := a.WalletSign(ctx, k, mcid.Bytes())
@@ -111,7 +106,7 @@ func (a *WalletAPI) WalletSetDefault(ctx context.Context, addr address.Address) 
 func (a *WalletAPI) WalletExport(ctx context.Context, addr address.Address, passwd string) (*types.KeyInfo, error) {
 	oldPasswd := wallet.WalletPasswd
 	wallet.WalletPasswd = passwd
-	defer func(){
+	defer func() {
 		wallet.WalletPasswd = oldPasswd
 	}()
 	return a.Wallet.Export(addr)

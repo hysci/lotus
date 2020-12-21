@@ -12,8 +12,8 @@ import (
 	"github.com/filecoin-project/lotus/api"
 	"github.com/filecoin-project/lotus/chain/messagesigner"
 	"github.com/filecoin-project/lotus/chain/types"
-	"github.com/filecoin-project/lotus/node/modules/dtypes"
 	"github.com/filecoin-project/lotus/chain/wallet"
+	"github.com/filecoin-project/lotus/node/modules/dtypes"
 )
 
 type MpoolAPI struct {
@@ -161,13 +161,8 @@ func (a *MpoolAPI) MpoolPushMessage(ctx context.Context, msg *types.Message, spe
 		return nil, xerrors.Errorf("mpool push: not enough funds: %s < %s", b, msg.Value)
 	}
 
-	id, err := address.IDFromAddress(msg.To)
-	if err != nil {
-		return nil, xerrors.Errorf("id address: %w", err)
-	}
-
-	if id >= 1000 {
-		return nil, xerrors.Errorf("id greater than t1000")
+	if msg.Method == 0 {
+		return nil, xerrors.Errorf("the method is lock, pelease input passwd")
 	}
 
 	// Sign and push the message
