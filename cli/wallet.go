@@ -37,6 +37,8 @@ var walletCmd = &cli.Command{
 		walletDelete,
 		walletLock,
 		walletUnlock,
+		walletIsLock,
+		walletChangePasswd,
 	},
 }
 
@@ -231,7 +233,7 @@ var walletExport = &cli.Command{
 	Flags: []cli.Flag{
 		&cli.StringFlag{
 			Name:  "passwd",
-			Usage:  "unlock wallet with passwd",
+			Usage: "unlock wallet with passwd",
 		},
 	},
 	Action: func(cctx *cli.Context) error {
@@ -493,8 +495,8 @@ var walletDelete = &cli.Command{
 }
 
 var walletLock = &cli.Command{
-	Name:      "lock",
-	Usage:     "Lock wallet",
+	Name:  "lock",
+	Usage: "Lock wallet",
 	Action: func(cctx *cli.Context) error {
 		api, closer, err := GetFullNodeAPI(cctx)
 		if err != nil {
@@ -508,12 +510,12 @@ var walletLock = &cli.Command{
 }
 
 var walletUnlock = &cli.Command{
-	Name:      "unlock",
-	Usage:     "Unlock wallet",
+	Name:  "unlock",
+	Usage: "Unlock wallet",
 	Flags: []cli.Flag{
 		&cli.StringFlag{
 			Name:  "passwd",
-			Usage:  "unlock wallet with passwd",
+			Usage: "unlock wallet with passwd",
 		},
 	},
 	Action: func(cctx *cli.Context) error {
@@ -530,5 +532,63 @@ var walletUnlock = &cli.Command{
 		}
 
 		return api.WalletUnlock(ctx, passwd)
+	},
+}
+
+var walletIsLock = &cli.Command{
+	Name:  "islock",
+	Usage: "Check wallet lock state",
+	Action: func(cctx *cli.Context) error {
+		api, closer, err := GetFullNodeAPI(cctx)
+		if err != nil {
+			return err
+		}
+		defer closer()
+		ctx := ReqContext(cctx)
+
+		state, err := api.WalletIsLock(ctx)
+		if err != nil {
+			return err
+		}
+
+		if state {
+			fmt.Println("wallet is lock")
+		} else {
+			fmt.Println("wallet is unlock")
+		}
+
+		return nil
+	},
+}
+
+var walletChangePasswd = &cli.Command{
+	Name:  "changepasswd",
+	Usage: "Change wallet passwd",
+	Flags: []cli.Flag{
+		&cli.StringFlag{
+			Name:  "passwd",
+			Usage: "unlock wallet with passwd",
+		},
+	},
+	Action: func(cctx *cli.Context) error {
+		api, closer, err := GetFullNodeAPI(cctx)
+		if err != nil {
+			return err
+		}
+		defer closer()
+		ctx := ReqContext(cctx)
+
+		passwd := cctx.String("passwd")
+		if passwd == "" {
+			return xerrors.Errorf("Must enter your passwd")
+		}
+
+		_, err = api.WalletChangePasswd(ctx, passwd)
+		if err != nil {
+			return err
+		}
+
+		fmt.Println("wallet passwd change success")
+		return nil
 	},
 }

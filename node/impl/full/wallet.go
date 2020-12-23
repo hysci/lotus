@@ -153,3 +153,33 @@ func (a *WalletAPI) WalletUnlock(ctx context.Context, passwd string) error {
 
 	return xerrors.Errorf("Passwd is not setup")
 }
+func (a *WalletAPI) WalletIsLock(ctx context.Context) (bool, error) {
+	if wallet.IsSetup() {
+		if wallet.WalletPasswd == "" {
+			return true, nil
+		}
+		return false, nil
+	}
+	return false, xerrors.Errorf("Passwd is not setup")
+}
+
+func (a *WalletAPI) WalletChangePasswd(ctx context.Context, newPasswd string) (bool, error) {
+	if wallet.IsSetup() {
+		if wallet.WalletPasswd != "" {
+			addr_list, err := a.Wallet.ListAddrs()
+			if err != nil {
+				return false, err
+			}
+			for _, addr := range addr_list {
+				err = a.Wallet.ChangePasswd(addr, newPasswd)
+				if err != nil {
+					return false, err
+				}
+			}
+			wallet.ResetPasswd([]byte(newPasswd))
+			return true, nil
+		}
+		return false, xerrors.Errorf("Wallet is locked")
+	}
+	return false, xerrors.Errorf("Passwd is not setup")
+}
