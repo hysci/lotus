@@ -154,7 +154,7 @@ func (w *Wallet) Export(addr address.Address) (*types.KeyInfo, error) {
 	return &pki, nil
 }
 
-func (w *Wallet) ClearPasswd() {
+func (w *Wallet) ClearCache() {
 	w.keys = make(map[address.Address]*Key)
 }
 

@@ -163,7 +163,7 @@ func (a *WalletAPI) WalletIsLock(ctx context.Context) (bool, error) {
 	return false, xerrors.Errorf("Passwd is not setup")
 }
 
-func (a *WalletAPI) WalletClearPasswd(ctx context.Context, newPasswd string) (bool, error) {
+func (a *WalletAPI) WalletChangePasswd(ctx context.Context, newPasswd string) (bool, error) {
 	if wallet.IsSetup() {
 		if wallet.WalletPasswd != "" {
 			addr_list, err := a.Wallet.ListAddrs()
@@ -213,7 +213,7 @@ func (a *WalletAPI) WalletClearPasswd(ctx context.Context, newPasswd string) (bo
 				}
 			}
 
-			a.Wallet.ClearPasswd()
+			a.Wallet.ClearCache()
 
 			return true, nil
 		}
