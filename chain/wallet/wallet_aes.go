@@ -44,7 +44,7 @@ const checkMsg string = "check passwd is success"
 func AESEncrypt(key, plaintext []byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		return nil, xerrors.Errorf("passwd is too easy")
+		return nil, xerrors.Errorf("passwd must be 16 character")
 	}
 
 	ciphertext := make([]byte, aes.BlockSize+len(plaintext))
@@ -62,9 +62,9 @@ func AESEncrypt(key, plaintext []byte) ([]byte, error) {
 func AESDecrypt(key, ciphertext []byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		return nil, xerrors.Errorf("passwd is too easy")
+		return nil, xerrors.Errorf("passwd must be 16 character")
 	} else if len(ciphertext) < aes.BlockSize {
-		return nil, xerrors.Errorf("passwd is too short")
+		return nil, xerrors.Errorf("passwd must be 16 character")
 	}
 
 	iv := ciphertext[:aes.BlockSize]

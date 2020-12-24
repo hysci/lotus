@@ -45,12 +45,11 @@ var DrandConfigs = map[DrandEnum]dtypes.DrandConfig{
 	},
 	DrandTestnet: {
 		Servers: []string{
-			"http://a1.filecoincash.com:9090",
-			"http://a2.filecoincash.com:9090",
-			"http://a3.filecoincash.com:9090",
+			"https://api1.drand.top",
+			"https://api2.drand.top",
+			"https://api3.drand.top",
 		},
-		Relays:  []string{
-		},
+		Relays:        []string{},
 		ChainInfoJSON: `{"public_key":"802b72507592ecf040e7c95a9d96d9e950b0dd426be36c62e2cdf3d4cb2a307acb5efa7c2fe222087e450f6e9ccc5257","period":30,"genesis_time":1602883530,"hash":"977236ee92f8edff9e28ab68bd0c5849be5226800a344e490267dd9950b273f3","groupHash":"18d8227dad40642b74463a492b37d43e1a8d3149710383d8cd5dadd2b241b2c4"}`,
 	},
 	DrandDevnet: {
@@ -66,12 +65,11 @@ var DrandConfigs = map[DrandEnum]dtypes.DrandConfig{
 	},
 	DrandIncentinet: {
 		Servers: []string{
-			"http://a1.filecoincash.com:9090",
-			"http://a2.filecoincash.com:9090",
-			"http://a3.filecoincash.com:9090",
+			"https://api1.drand.top",
+			"https://api2.drand.top",
+			"https://api3.drand.top",
 		},
-		Relays:  []string{
-		},
+		Relays:        []string{},
 		ChainInfoJSON: `{"public_key":"802b72507592ecf040e7c95a9d96d9e950b0dd426be36c62e2cdf3d4cb2a307acb5efa7c2fe222087e450f6e9ccc5257","period":30,"genesis_time":1602883530,"hash":"977236ee92f8edff9e28ab68bd0c5849be5226800a344e490267dd9950b273f3","groupHash":"18d8227dad40642b74463a492b37d43e1a8d3149710383d8cd5dadd2b241b2c4"}`,
 	},
 }

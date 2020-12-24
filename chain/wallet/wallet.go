@@ -154,25 +154,8 @@ func (w *Wallet) Export(addr address.Address) (*types.KeyInfo, error) {
 	return &pki, nil
 }
 
-func (w *Wallet) ChangePasswd(addr address.Address, passwd string) error {
-	k, err := w.findKey(addr)
-	if err != nil {
-		return xerrors.Errorf("failed to find key to export: %w", err)
-	}
-	pk, err := MakeByte(k.PrivateKey, false)
-	if err != nil {
-		return err
-	}
-	oldPasswd := WalletPasswd
-	WalletPasswd = passwd
-	defer func() {
-		WalletPasswd = oldPasswd
-	}()
-	k.PrivateKey, err = MakeByte(pk, true)
-	if err != nil {
-		return err
-	}
-	return nil
+func (w *Wallet) ClearPasswd() {
+	w.keys = make(map[address.Address]*Key)
 }
 
 func (w *Wallet) Import(ki *types.KeyInfo) (address.Address, error) {

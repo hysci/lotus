@@ -38,7 +38,7 @@ var walletCmd = &cli.Command{
 		walletLock,
 		walletUnlock,
 		walletIsLock,
-		walletChangePasswd,
+		walletClearPasswd,
 	},
 }
 
@@ -561,9 +561,9 @@ var walletIsLock = &cli.Command{
 	},
 }
 
-var walletChangePasswd = &cli.Command{
-	Name:  "changepasswd",
-	Usage: "Change wallet passwd",
+var walletClearPasswd = &cli.Command{
+	Name:  "clearpasswd",
+	Usage: "Clear wallet passwd",
 	Flags: []cli.Flag{
 		&cli.StringFlag{
 			Name:  "passwd",
@@ -583,12 +583,12 @@ var walletChangePasswd = &cli.Command{
 			return xerrors.Errorf("Must enter your passwd")
 		}
 
-		_, err = api.WalletChangePasswd(ctx, passwd)
+		_, err = api.WalletClearPasswd(ctx, passwd)
 		if err != nil {
 			return err
 		}
 
-		fmt.Println("wallet passwd change success")
+		fmt.Println("wallet passwd clear success")
 		return nil
 	},
 }

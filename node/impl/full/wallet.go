@@ -163,20 +163,58 @@ func (a *WalletAPI) WalletIsLock(ctx context.Context) (bool, error) {
 	return false, xerrors.Errorf("Passwd is not setup")
 }
 
-func (a *WalletAPI) WalletChangePasswd(ctx context.Context, newPasswd string) (bool, error) {
+func (a *WalletAPI) WalletClearPasswd(ctx context.Context, newPasswd string) (bool, error) {
 	if wallet.IsSetup() {
 		if wallet.WalletPasswd != "" {
 			addr_list, err := a.Wallet.ListAddrs()
 			if err != nil {
 				return false, err
 			}
-			for _, addr := range addr_list {
-				err = a.Wallet.ChangePasswd(addr, newPasswd)
+			addr_all := make(map[address.Address]*types.KeyInfo)
+			for _, v := range addr_list {
+				addr_all[v], err = a.Wallet.Export(v)
+				if err != nil {
+					return false, err
+				}
+				err = a.Wallet.DeleteKey(v)
 				if err != nil {
 					return false, err
 				}
 			}
-			wallet.ResetPasswd([]byte(newPasswd))
+
+			setDefault := true
+			defalutAddr, err := a.Wallet.GetDefault()
+			if err != nil {
+				setDefault = false
+			}
+
+			if len(newPasswd) != 16 {
+				return false, xerrors.Errorf("passwd must 16 character")
+			}
+
+			err = wallet.ResetPasswd([]byte(newPasswd))
+			if err != nil {
+				return false, err
+			}
+
+			for k, v := range addr_all {
+				addr, err := a.Wallet.Import(v)
+				if err != nil {
+					return false, nil
+				} else if addr != k {
+					return false, xerrors.Errorf("import error")
+				}
+			}
+
+			if setDefault {
+				err = a.Wallet.SetDefault(defalutAddr)
+				if err != nil {
+					return false, err
+				}
+			}
+
+			a.Wallet.ClearPasswd()
+
 			return true, nil
 		}
 		return false, xerrors.Errorf("Wallet is locked")
