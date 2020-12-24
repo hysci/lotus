@@ -45,9 +45,9 @@ var DrandConfigs = map[DrandEnum]dtypes.DrandConfig{
 	},
 	DrandTestnet: {
 		Servers: []string{
-			"http://a1.filecoincash.com:9090",
-			"http://a2.filecoincash.com:9090",
-			"http://a3.filecoincash.com:9090",
+			"https://api1.drand.top",
+			"https://api2.drand.top",
+			"https://api3.drand.top",
 		},
 		Relays:  []string{
 		},
@@ -66,9 +66,9 @@ var DrandConfigs = map[DrandEnum]dtypes.DrandConfig{
 	},
 	DrandIncentinet: {
 		Servers: []string{
-			"http://a1.filecoincash.com:9090",
-			"http://a2.filecoincash.com:9090",
-			"http://a3.filecoincash.com:9090",
+			"https://api1.drand.top",
+			"https://api2.drand.top",
+			"https://api3.drand.top",
 		},
 		Relays:  []string{
 		},
