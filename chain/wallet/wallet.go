@@ -324,6 +324,19 @@ func (w *Wallet) DeleteKey(addr address.Address) error {
 	return nil
 }
 
+func (w *Wallet) DeleteKey2(addr address.Address) error {
+	k, err := w.findKey(addr)
+	if err != nil {
+		return xerrors.Errorf("failed to delete key %s : %w", addr, err)
+	}
+
+	if err := w.keystore.Delete(KNamePrefix + k.Address.String()); err != nil {
+		return xerrors.Errorf("failed to delete key %s: %w", addr, err)
+	}
+
+	return nil
+}
+
 type Key struct {
 	types.KeyInfo
 

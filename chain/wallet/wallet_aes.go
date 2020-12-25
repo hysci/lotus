@@ -113,6 +113,16 @@ func ResetPasswd(passwd []byte) error {
 	return nil
 }
 
+func ClearPasswd() error {
+	err := os.Remove(passwdPath)
+        if err != nil {
+                return err
+        }
+	WalletPasswd = ""
+	passwdPath = ""
+	return nil
+}
+
 func CheckPasswd(key []byte) error {
 	fstat, err := os.Stat(passwdPath)
 	if os.IsNotExist(err) {

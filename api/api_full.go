@@ -264,6 +264,8 @@ type FullNode interface {
 	WalletIsLock(context.Context) (bool, error)
 	// Wallet Change Password
 	WalletChangePasswd(context.Context, string) (bool, error)
+	// Wallet Clear Passwd
+	WalletClearPasswd(context.Context) (bool, error)
 
 	// Other
 

@@ -153,6 +153,7 @@ type FullNodeStruct struct {
 		WalletUnlock          func(context.Context, string) error                                                          `perm:"admin"`
 		WalletIsLock          func(context.Context) (bool, error)                                                          `perm:"admin"`
 		WalletChangePasswd    func(context.Context, string) (bool, error)                                                  `perm:"admin"`
+		WalletClearPasswd    func(context.Context) (bool, error)                                                           `perm:"admin"`
 
 		ClientImport                              func(ctx context.Context, ref api.FileRef) (*api.ImportRes, error)                                                `perm:"admin"`
 		ClientListImports                         func(ctx context.Context) ([]api.Import, error)                                                                   `perm:"write"`
@@ -690,6 +691,10 @@ func (c *FullNodeStruct) WalletIsLock(ctx context.Context) (bool, error) {
 
 func (c *FullNodeStruct) WalletChangePasswd(ctx context.Context, newPasswd string) (bool, error) {
 	return c.Internal.WalletChangePasswd(ctx, newPasswd)
+}
+
+func (c *FullNodeStruct) WalletClearPasswd(ctx context.Context) (bool, error) {
+        return c.Internal.WalletClearPasswd(ctx)
 }
 
 func (c *FullNodeStruct) MpoolGetNonce(ctx context.Context, addr address.Address) (uint64, error) {

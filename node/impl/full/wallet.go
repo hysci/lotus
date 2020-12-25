@@ -176,7 +176,7 @@ func (a *WalletAPI) WalletChangePasswd(ctx context.Context, newPasswd string) (b
 				if err != nil {
 					return false, err
 				}
-				err = a.Wallet.DeleteKey(v)
+				err = a.Wallet.DeleteKey2(v)
 				if err != nil {
 					return false, err
 				}
@@ -193,6 +193,61 @@ func (a *WalletAPI) WalletChangePasswd(ctx context.Context, newPasswd string) (b
 			}
 
 			err = wallet.ResetPasswd([]byte(newPasswd))
+			if err != nil {
+				return false, err
+			}
+
+			for k, v := range addr_all {
+				addr, err := a.Wallet.Import(v)
+				if err != nil {
+					return false, nil
+				} else if addr != k {
+					return false, xerrors.Errorf("import error")
+				}
+			}
+
+			if setDefault {
+				err = a.Wallet.SetDefault(defalutAddr)
+				if err != nil {
+					return false, err
+				}
+			}
+
+			a.Wallet.ClearCache()
+
+			return true, nil
+		}
+		return false, xerrors.Errorf("Wallet is locked")
+	}
+	return false, xerrors.Errorf("Passwd is not setup")
+}
+
+func (a *WalletAPI) WalletClearPasswd(ctx context.Context) (bool, error) {
+	if wallet.IsSetup() {
+		if wallet.WalletPasswd != "" {
+			addr_list, err := a.Wallet.ListAddrs()
+			if err != nil {
+				return false, err
+			}
+			addr_all := make(map[address.Address]*types.KeyInfo)
+			for _, v := range addr_list {
+				addr_all[v], err = a.Wallet.Export(v)
+				if err != nil {
+					return false, err
+				}
+				err = a.Wallet.DeleteKey2(v)
+				if err != nil {
+					return false, err
+				}
+			}
+
+			setDefault := true
+			defalutAddr, err := a.Wallet.GetDefault()
+			if err != nil {
+				setDefault = false
+			}
+
+			err = wallet.ClearPasswd()
 			if err != nil {
 				return false, err
 			}

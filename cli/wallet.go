@@ -39,6 +39,7 @@ var walletCmd = &cli.Command{
 		walletUnlock,
 		walletIsLock,
 		walletChangePasswd,
+		walletClearPasswd,
 	},
 }
 
@@ -591,4 +592,25 @@ var walletChangePasswd = &cli.Command{
 		fmt.Println("wallet passwd Change success")
 		return nil
 	},
+}
+
+var walletClearPasswd = &cli.Command{
+        Name:  "clearpasswd",
+        Usage: "Clear wallet passwd",
+        Action: func(cctx *cli.Context) error {
+                api, closer, err := GetFullNodeAPI(cctx)
+                if err != nil {
+                        return err
+                }
+                defer closer()
+                ctx := ReqContext(cctx)
+
+                _, err = api.WalletClearPasswd(ctx)
+                if err != nil {
+                        return err
+                }
+
+                fmt.Println("wallet passwd Clear success")
+                return nil
+        },
 }
