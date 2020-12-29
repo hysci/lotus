@@ -71,9 +71,8 @@ type StorageMiner interface {
 	WorkerJobs(context.Context) (map[uuid.UUID][]storiface.WorkerJob, error)
 	storiface.WorkerReturn
 
-	GetWorker(ctx context.Context) (map[uint64]sectorstorage.WorkerInfo, error)
-	SetWorkerParam(ctx context.Context, worker uint64, key string, value string) error
-
+	GetWorker(ctx context.Context) (map[string]sectorstorage.WorkerInfo, error)
+	SetWorkerParam(ctx context.Context, worker string, key string, value string) error
 	// SealingSchedDiag dumps internal sealing scheduler state
 	SealingSchedDiag(ctx context.Context, doSched bool) (interface{}, error)
 	SealingAbort(ctx context.Context, call storiface.CallID) error

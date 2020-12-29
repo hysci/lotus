@@ -54,18 +54,8 @@ type WorkerSelector interface {
 type scheduler struct {
 	workersLk sync.RWMutex
 	workers   map[WorkerID]*workerHandle
-	spt       abi.RegisteredSealProof
-
-	workersLk  sync.RWMutex
-	nextWorker WorkerID
-	workers    map[WorkerID]*workerHandle
 
 	execSectorWorker sectorGroup
-
-	newWorkers chan *workerHandle
-
-	watchClosing  chan WorkerID
-	workerClosing chan WorkerID
 
 	schedule       chan *workerRequest
 	windowRequests chan *schedWindowRequest
@@ -400,7 +390,7 @@ func (sh *scheduler) trySched() {
 			needRes := ResourceTable[task.taskType][task.sector.ProofType]
 
 			sh.execSectorWorker.lk.RLock()
-			sectorGroup, exist := sh.execSectorWorker.group[task.sector]
+			sectorGroup, exist := sh.execSectorWorker.group[task.sector.ID]
 			sh.execSectorWorker.lk.RUnlock()
 
 			task.indexHeap = sqi
@@ -418,7 +408,7 @@ func (sh *scheduler) trySched() {
 				}
 				if task.taskType != sealtasks.TTFetch {
 					if exist && sectorGroup != "all" {
-						workerGroup := worker.w.GetWorkerGroup(task.ctx)
+						workerGroup := worker.workerRpc.GetWorkerGroup(task.ctx)
 						if workerGroup != sectorGroup {
 							log.Infof("sectorGroup does not match workerGroup, sectorid: %v, sectorGroup: %s, workerGroup: %s, taskType: %s \n", task.sector, sectorGroup, workerGroup, task.taskType)
 							continue
@@ -497,7 +487,7 @@ func (sh *scheduler) trySched() {
 			wr := sh.workers[wid].info.Resources
 			worker := sh.workers[wid]
 
-			ok, err := worker.w.AllowableRange(task.ctx, task.taskType)
+			ok, err := worker.workerRpc.AllowableRange(task.ctx, task.taskType)
 			if !ok || err != nil {
 				// worker.lk.Unlock()
 				// windows[wnd].lk.Unlock()
@@ -512,16 +502,16 @@ func (sh *scheduler) trySched() {
 			}
 
 			log.Debugf("SCHED ASSIGNED sqi:%d sector %d task %s to window %d", sqi, task.sector.ID.Number, task.taskType, wnd)
-			err = worker.w.AddRange(task.ctx, task.taskType, 1)
+			err = worker.workerRpc.AddRange(task.ctx, task.taskType, 1)
 			if err != nil {
 				continue
 			}
-			err = worker.w.AddStore(task.ctx, task.sector, task.taskType)
+			err = worker.workerRpc.AddStore(task.ctx, task.sector.ID, task.taskType)
 			if err != nil {
 				continue
 			}
 
-			log.Debugf("SCHED ASSIGNED sqi:%d sector %d task %s to window %d", sqi, task.sector.Number, task.taskType, wnd)
+			log.Debugf("SCHED ASSIGNED sqi:%d sector %d task %s to window %d", sqi, task.sector.ID.Number, task.taskType, wnd)
 
 			windows[wnd].allocated.add(wr, needRes)
 			// TODO: We probably want to re-sort acceptableWindows here based on new

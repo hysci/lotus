@@ -94,11 +94,11 @@ func (sm *StorageMinerAPI) WorkerJobs(ctx context.Context) (map[uuid.UUID][]stor
 	return sm.StorageMgr.WorkerJobs(), nil
 }
 
-func (sm *StorageMinerAPI) GetWorker(ctx context.Context) (map[uint64]sectorstorage.WorkerInfo, error) {
+func (sm *StorageMinerAPI) GetWorker(ctx context.Context) (map[string]sectorstorage.WorkerInfo, error) {
 	return sm.StorageMgr.GetWorker(ctx), nil
 }
 
-func (sm *StorageMinerAPI) SetWorkerParam(ctx context.Context, worker uint64, key string, value string) error {
+func (sm *StorageMinerAPI) SetWorkerParam(ctx context.Context, worker string, key string, value string) error {
 	return sm.StorageMgr.SetWorkerParam(ctx, worker, key, value)
 }
 

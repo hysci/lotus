@@ -96,26 +96,30 @@ func (m *Manager) WorkerJobs() map[uuid.UUID][]storiface.WorkerJob {
 	return out
 }
 
-func (m *Manager) GetWorker(ctx context.Context) map[uint64]WorkerInfo {
+func (m *Manager) GetWorker(ctx context.Context) map[string]WorkerInfo {
 	m.sched.workersLk.Lock()
 	defer m.sched.workersLk.Unlock()
 
-	out := map[uint64]WorkerInfo{}
+	out := map[string]WorkerInfo{}
 
 	for id, handle := range m.sched.workers {
-		info := handle.w.GetWorkerInfo(ctx)
-		out[uint64(id)] = info
+		info := handle.workerRpc.GetWorkerInfo(ctx)
+		out[id.String()] = info
 	}
 	return out
 }
 
-func (m *Manager) SetWorkerParam(ctx context.Context, worker uint64, key string, value string) error {
+func (m *Manager) SetWorkerParam(ctx context.Context, worker, key string, value string) error {
 	m.sched.workersLk.Lock()
 	defer m.sched.workersLk.Unlock()
 
-	w, exist := m.sched.workers[WorkerID(worker)]
+	uuidWorker, err := uuid.Parse(worker)
+	if err != nil {
+		return err
+	}
+	w, exist := m.sched.workers[WorkerID(uuidWorker)]
 	if !exist {
 		return xerrors.Errorf("worker not found: %s", key)
 	}
-	return w.w.SetWorkerParams(ctx, key, value)
+	return w.workerRpc.SetWorkerParams(ctx, key, value)
 }

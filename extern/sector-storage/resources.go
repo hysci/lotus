@@ -398,7 +398,7 @@ var ResourceTable = map[sealtasks.TaskType]map[abi.RegisteredSealProof]Resources
 			CanGPU:  false,
 
 			BaseMinMemory: 0,
-        },
+       		 },
 		abi.RegisteredSealProof_StackedDrg16GiBV1: Resources{
 			MaxMemory: 1 << 20,
 			MinMemory: 1 << 20,

@@ -408,7 +408,7 @@ var runCmd = &cli.Command{
 				Group:         cctx.String("group"),
 
 				NoSwap: cctx.Bool("no-swap"),
-			}, remote, localStore, nodeApi),
+			}, remote, localStore, nodeApi, nodeApi, wsts),
 			localStore: localStore,
 			ls:         lr,
 		}

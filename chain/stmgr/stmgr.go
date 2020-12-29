@@ -83,15 +83,6 @@ type StateManager struct {
 
 	genesisPledge      abi.TokenAmount
 	genesisMarketFunds abi.TokenAmount
-	stCache            map[string][]cid.Cid
-	compWait           map[string]chan struct{}
-	stlk               sync.Mutex
-	genesisMsigLk      sync.Mutex
-	newVM              func(context.Context, *vm.VMOpts) (*vm.VM, error)
-	//preIgnitionGenInfos  *genesisInfo
-	//postIgnitionGenInfos *genesisInfo
-	ancestorGenInfo *genesisInfo
-	creeperGenInfo  *genesisInfo
 }
 
 func NewStateManager(cs *store.ChainStore) *StateManager {
@@ -973,62 +964,26 @@ func (sm *StateManager) setupGenesisVestingSchedule(ctx context.Context) error {
 		sm.preIgnitionVesting = append(sm.preIgnitionVesting, ns)
 	}
 
-	sm.ancestorGenInfo = &gi
-
 	return nil
 }
 
-// sets up information about the actors in the genesis state
-// For testnet we use a hardcoded set of multisig states, instead of what's actually in the genesis multisigs
-// We also do not consider ANY account actors (including the faucet)
-func (sm *StateManager) setupAncestorGenesisActorsTestnet(ctx context.Context) error {
-
-	gi := genesisInfo{}
-
-	gb, err := sm.cs.GetGenesis()
-	if err != nil {
-		return xerrors.Errorf("getting genesis block: %w", err)
-	}
-
-	gts, err := types.NewTipSet([]*types.BlockHeader{gb})
-	if err != nil {
-		return xerrors.Errorf("getting genesis tipset: %w", err)
-	}
-
-	st, _, err := sm.TipSetState(ctx, gts)
-	if err != nil {
-		return xerrors.Errorf("getting genesis tipset state: %w", err)
-	}
-
-	cst := cbor.NewCborStore(sm.cs.Blockstore())
-	sTree, err := state.LoadStateTree(cst, st)
-	if err != nil {
-		return xerrors.Errorf("loading state tree: %w", err)
-	}
-
-	gi.genesisMarketFunds, err = getFilMarketLocked(ctx, sTree)
-	if err != nil {
-		return xerrors.Errorf("setting up genesis market funds: %w", err)
-	}
-
-	gi.genesisPledge, err = getFilPowerLocked(ctx, sTree)
-	if err != nil {
-		return xerrors.Errorf("setting up genesis pledge: %w", err)
-	}
+// sets up information about the vesting schedule post the ignition upgrade
+func (sm *StateManager) setupPostIgnitionVesting(ctx context.Context) error {
 
 	totalsByEpoch := make(map[abi.ChainEpoch]abi.TokenAmount)
 
 	// 2 years
-	twoYears := abi.ChainEpoch(2 * 365 * builtin0.EpochsInDay)
+	twoYears := abi.ChainEpoch(2 * 365 * builtin.EpochsInDay)
 	totalsByEpoch[twoYears] = big.NewInt(200_000_000)
 
 	// 3 years
-	threeYears := abi.ChainEpoch(3 * 365 * builtin0.EpochsInDay)
+	threeYears := abi.ChainEpoch(3 * 365 * builtin.EpochsInDay)
 	totalsByEpoch[threeYears] = big.NewInt(50_000_000)
 
 	// 6 years
-	sixYears := abi.ChainEpoch(6 * 365 * builtin0.EpochsInDay)
+	sixYears := abi.ChainEpoch(6 * 365 * builtin.EpochsInDay)
 	totalsByEpoch[sixYears] = big.NewInt(50_000_000)
+	totalsByEpoch[sixYears] = big.Add(totalsByEpoch[sixYears], big.NewInt(300_000_000))
 
 	sm.postIgnitionVesting = make([]msig0.State, 0, len(totalsByEpoch))
 	for k, v := range totalsByEpoch {
@@ -1043,64 +998,28 @@ func (sm *StateManager) setupAncestorGenesisActorsTestnet(ctx context.Context) e
 		sm.postIgnitionVesting = append(sm.postIgnitionVesting, ns)
 	}
 
-	sm.ancestorGenInfo = &gi
-
 	return nil
 }
 
-// sets up information about the creeper in the genesis state
-func (sm *StateManager) setupCreeperGenesisActorsTestnet(ctx context.Context) error {
-	gi := genesisInfo{}
-
-	gb, err := sm.cs.GetGenesis()
-	if err != nil {
-		return xerrors.Errorf("getting genesis block: %w", err)
-	}
-
-	gts, err := types.NewTipSet([]*types.BlockHeader{gb})
-	if err != nil {
-		return xerrors.Errorf("getting genesis tipset: %w", err)
-	}
-
-	st, _, err := sm.TipSetState(ctx, gts)
-	if err != nil {
-		return xerrors.Errorf("getting genesis tipset state: %w", err)
-	}
-
-	cst := cbor.NewCborStore(sm.cs.Blockstore())
-	sTree, err := state.LoadStateTree(cst, st)
-	if err != nil {
-		return xerrors.Errorf("loading state tree: %w", err)
-	}
-
-	// Unnecessary, should be removed
-	gi.genesisMarketFunds, err = getFilMarketLocked(ctx, sTree)
-	if err != nil {
-		return xerrors.Errorf("setting up genesis market funds: %w", err)
-	}
-
-	// Unnecessary, should be removed
-	gi.genesisPledge, err = getFilPowerLocked(ctx, sTree)
-	if err != nil {
-		return xerrors.Errorf("setting up genesis pledge: %w", err)
-	}
+// sets up information about the vesting schedule post the calico upgrade
+func (sm *StateManager) setupPostCalicoVesting(ctx context.Context) error {
 
 	totalsByEpoch := make(map[abi.ChainEpoch]abi.TokenAmount)
 	totalsStartEpoch := make(map[abi.ChainEpoch]abi.ChainEpoch)
 
-	threeDays := abi.ChainEpoch(3 * builtin0.EpochsInDay)
+	threeDays := abi.ChainEpoch(3 * builtin.EpochsInDay)
 	totalsByEpoch[threeDays] = big.Mul(big.NewInt(83_333_332), big.NewInt(int64(build.FilecoinPrecision/10)))
 	totalsStartEpoch[threeDays] = abi.ChainEpoch(54720)
 
-	twoYears := abi.ChainEpoch(2 * 365 * builtin0.EpochsInDay)
+	twoYears := abi.ChainEpoch(2 * 365 * builtin.EpochsInDay)
 	totalsByEpoch[twoYears] = big.Mul(big.NewInt(1_916_666_666), big.NewInt(int64(build.FilecoinPrecision/10)))
 	totalsStartEpoch[twoYears] = abi.ChainEpoch(135360)
 
-	threeYears := abi.ChainEpoch(3 * 365 * builtin0.EpochsInDay)
+	threeYears := abi.ChainEpoch(3 * 365 * builtin.EpochsInDay)
 	totalsByEpoch[threeYears] = big.Mul(big.NewInt(50_000_000), big.NewInt(int64(build.FilecoinPrecision)))
 	totalsStartEpoch[threeYears] = abi.ChainEpoch(54720)
 
-	sixYears := abi.ChainEpoch(6 * 365 * builtin0.EpochsInDay)
+	sixYears := abi.ChainEpoch(6 * 365 * builtin.EpochsInDay)
 	totalsByEpoch[sixYears] = big.Mul(big.NewInt(50_000_000), big.NewInt(int64(build.FilecoinPrecision)))
 	totalsStartEpoch[sixYears] = abi.ChainEpoch(54720)
 
@@ -1116,8 +1035,6 @@ func (sm *StateManager) setupCreeperGenesisActorsTestnet(ctx context.Context) er
 		sm.postCalicoVesting = append(sm.postCalicoVesting, ns)
 	}
 
-	sm.creeperGenInfo = &gi
-
 	return nil
 }
 
@@ -1127,39 +1044,32 @@ func (sm *StateManager) setupCreeperGenesisActorsTestnet(ctx context.Context) er
 func (sm *StateManager) GetFilVested(ctx context.Context, height abi.ChainEpoch, st *state.StateTree) (abi.TokenAmount, error) {
 	vf := big.Zero()
 	if height <= build.UpgradeCreeperHeight {
-		for _, v := range sm.ancestorGenInfo.genesisMsigs {
+		for _, v := range sm.preIgnitionVesting {
 			au := big.Sub(v.InitialBalance, v.AmountLocked(height))
 			vf = big.Add(vf, au)
 		}
-	} else {
-		for _, v := range sm.creeperGenInfo.genesisMsigs {
-			// In the ancestor logic, we simply called AmountLocked(height), assuming startEpoch was 0.
-			// The start epoch changed in the creeper upgrade.
+	} else if height <= build.UpgradeCalicoHeight {
+		for _, v := range sm.postIgnitionVesting {
+			// In the pre-ignition logic, we simply called AmountLocked(height), assuming startEpoch was 0.
+			// The start epoch changed in the Ignition upgrade.
 			au := big.Sub(v.InitialBalance, v.AmountLocked(height-v.StartEpoch))
 			vf = big.Add(vf, au)
 		}
-	}
-
-	// there should not be any such accounts in testnet (and also none in mainnet?)
-	// continue to use ancestorGenInfo, nothing changed at the Ignition epoch
-	for _, v := range sm.ancestorGenInfo.genesisActors {
-		act, err := st.GetActor(v.addr)
-		if err != nil {
-			return big.Zero(), xerrors.Errorf("failed to get actor: %w", err)
-		}
-
-		diff := big.Sub(v.initBal, act.Balance)
-		if diff.GreaterThan(big.Zero()) {
-			vf = big.Add(vf, diff)
+	} else {
+		for _, v := range sm.postCalicoVesting {
+			// In the pre-ignition logic, we simply called AmountLocked(height), assuming startEpoch was 0.
+			// The start epoch changed in the Ignition upgrade.
+			au := big.Sub(v.InitialBalance, v.AmountLocked(height-v.StartEpoch))
+			vf = big.Add(vf, au)
 		}
 	}
 
 	// After UpgradeActorsV2Height these funds are accounted for in GetFilReserveDisbursed
 	if height <= build.UpgradeActorsV2Height {
 		// continue to use preIgnitionGenInfos, nothing changed at the Ignition epoch
-		vf = big.Add(vf, sm.ancestorGenInfo.genesisPledge)
+		vf = big.Add(vf, sm.genesisPledge)
 		// continue to use preIgnitionGenInfos, nothing changed at the Ignition epoch
-		vf = big.Add(vf, sm.ancestorGenInfo.genesisMarketFunds)
+		vf = big.Add(vf, sm.genesisMarketFunds)
 	}
 
 	return vf, nil
@@ -1253,16 +1163,22 @@ func (sm *StateManager) GetVMCirculatingSupply(ctx context.Context, height abi.C
 func (sm *StateManager) GetVMCirculatingSupplyDetailed(ctx context.Context, height abi.ChainEpoch, st *state.StateTree) (api.CirculatingSupply, error) {
 	sm.genesisMsigLk.Lock()
 	defer sm.genesisMsigLk.Unlock()
-	if sm.ancestorGenInfo == nil {
-		err := sm.setupAncestorGenesisActorsTestnet(ctx)
+	if sm.preIgnitionVesting == nil || sm.genesisPledge.IsZero() || sm.genesisMarketFunds.IsZero() {
+		err := sm.setupGenesisVestingSchedule(ctx)
 		if err != nil {
-			return api.CirculatingSupply{}, xerrors.Errorf("failed to setup ancestor  genesis information: %w", err)
+			return api.CirculatingSupply{}, xerrors.Errorf("failed to setup pre-ignition vesting schedule: %w", err)
 		}
 	}
-	if sm.creeperGenInfo == nil {
-		err := sm.setupCreeperGenesisActorsTestnet(ctx)
+	if sm.postIgnitionVesting == nil {
+		err := sm.setupPostIgnitionVesting(ctx)
 		if err != nil {
-			return api.CirculatingSupply{}, xerrors.Errorf("failed to setup creeper genesis information: %w", err)
+			return api.CirculatingSupply{}, xerrors.Errorf("failed to setup post-ignition vesting schedule: %w", err)
+		}
+	}
+	if sm.postCalicoVesting == nil {
+		err := sm.setupPostCalicoVesting(ctx)
+		if err != nil {
+			return api.CirculatingSupply{}, xerrors.Errorf("failed to setup post-calico vesting schedule: %w", err)
 		}
 	}
 

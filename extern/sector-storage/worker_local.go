@@ -7,6 +7,8 @@ import (
 	"os"
 	"reflect"
 	"runtime"
+	"sort"
+	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -33,6 +35,11 @@ var pathTypes = []storiface.SectorFileType{storiface.FTUnsealed, storiface.FTSea
 type WorkerConfig struct {
 	TaskTypes []sealtasks.TaskType
 	NoSwap    bool
+
+	PreCommit1Max int64
+	PreCommit2Max int64
+	CommitMax     int64
+	Group         string
 }
 
 // used do provide custom proofs impl (mostly used in testing)
@@ -54,12 +61,42 @@ type LocalWorker struct {
 	session     uuid.UUID
 	testDisable int64
 	closing     chan struct{}
+
+	preCommit1Max int64
+	preCommit1Now int64
+	preCommit2Max int64
+	preCommit2Now int64
+	commitMax     int64
+	commitNow     int64
+	group         string
+	storeList     taskList
+}
+
+type taskList struct {
+	lk   sync.Mutex
+	list map[abi.SectorID]string
+}
+
+type WorkerInfo struct {
+	PreCommit1Max int64
+	PreCommit1Now int64
+	PreCommit2Max int64
+	PreCommit2Now int64
+	CommitMax     int64
+	CommitNow     int64
+	Group         string
+	StoreList     map[string]string
+	AcceptTasks   []string
 }
 
 func newLocalWorker(executor ExecutorFunc, wcfg WorkerConfig, store stores.Store, local *stores.Local, sindex stores.SectorIndex, ret storiface.WorkerReturn, cst *statestore.StateStore) *LocalWorker {
 	acceptTasks := map[sealtasks.TaskType]struct{}{}
 	for _, taskType := range wcfg.TaskTypes {
 		acceptTasks[taskType] = struct{}{}
+	}
+
+	if wcfg.Group == "" {
+		wcfg.Group = "all"
 	}
 
 	w := &LocalWorker{
@@ -77,6 +114,14 @@ func newLocalWorker(executor ExecutorFunc, wcfg WorkerConfig, store stores.Store
 
 		session: uuid.New(),
 		closing: make(chan struct{}),
+
+		preCommit1Max: wcfg.PreCommit1Max,
+		preCommit2Max: wcfg.PreCommit2Max,
+		commitMax:     wcfg.CommitMax,
+		group:         wcfg.Group,
+		storeList: taskList{
+			list: make(map[abi.SectorID]string),
+		},
 	}
 
 	if w.executor == nil {
@@ -574,3 +619,146 @@ func (w *wctx) Value(key interface{}) interface{} {
 var _ context.Context = &wctx{}
 
 var _ Worker = &LocalWorker{}
+
+func (l *LocalWorker) AddRange(ctx context.Context, task sealtasks.TaskType, addType int) error {
+
+	switch task {
+	case sealtasks.TTPreCommit1:
+		if addType == 1 {
+			l.preCommit1Now++
+		} else {
+			l.preCommit1Now--
+		}
+	case sealtasks.TTPreCommit2:
+		if addType == 1 {
+			l.preCommit2Now++
+		} else {
+			l.preCommit2Now--
+		}
+	case sealtasks.TTCommit1, sealtasks.TTCommit2:
+		if addType == 1 {
+			l.commitNow++
+		} else {
+			l.commitNow--
+		}
+	}
+
+	return nil
+}
+
+func (l *LocalWorker) AllowableRange(ctx context.Context, task sealtasks.TaskType) (bool, error) {
+
+	switch task {
+
+	/*	prevent addpiece from queuing
+		when the worker has other tasks
+		this worker will not execute addpiece
+	*/
+	case sealtasks.TTAddPiece:
+		taskTotal := l.preCommit1Now + l.preCommit2Now + l.commitNow
+		if taskTotal > 0 {
+			log.Info("this task has other task")
+			return false, nil
+		}
+
+	case sealtasks.TTPreCommit1:
+		if l.preCommit1Max > 0 {
+			if l.preCommit1Now >= l.preCommit1Max {
+				log.Infof("this task is over range, task: TTPreCommit1, max: %v, now: %v", l.preCommit1Max, l.preCommit1Now)
+				return false, nil
+			}
+		}
+	case sealtasks.TTPreCommit2:
+		if l.preCommit2Max > 0 {
+			if l.preCommit2Now >= l.preCommit2Max {
+				log.Infof("this task is over range, task: TTPreCommit2, max: %v, now: %v", l.preCommit2Max, l.preCommit2Now)
+				return false, nil
+			}
+		}
+	case sealtasks.TTCommit1, sealtasks.TTCommit2:
+		if l.commitMax > 0 {
+			if l.commitNow >= l.commitMax {
+				log.Infof("this task is over range, task: TTCommit1, max: %v, now: %v", l.commitMax, l.commitNow)
+				return false, nil
+			}
+		}
+	}
+
+	return true, nil
+}
+func (l *LocalWorker) GetWorkerInfo(ctx context.Context) WorkerInfo {
+	task := make([]string, 0)
+
+	for info := range l.acceptTasks {
+		task = append(task, sealtasks.TaskMean[info])
+	}
+
+	sort.Strings(task)
+
+	workerInfo := WorkerInfo{
+		PreCommit1Max: l.preCommit1Max,
+		PreCommit1Now: l.preCommit1Now,
+		PreCommit2Max: l.preCommit2Max,
+		PreCommit2Now: l.preCommit2Now,
+		CommitMax:     l.commitMax,
+		CommitNow:     l.commitNow,
+		AcceptTasks:   task,
+		Group:         l.group,
+	}
+
+	workerInfo.StoreList = make(map[string]string)
+
+	for id, taskType := range l.storeList.list {
+		key := "{" + strconv.FormatUint(uint64(id.Miner), 10) + "," + strconv.FormatUint(uint64(id.Number), 10) + "}"
+		workerInfo.StoreList[key] = taskType
+	}
+
+	return workerInfo
+}
+func (l *LocalWorker) AddStore(ctx context.Context, ID abi.SectorID, taskType sealtasks.TaskType) error {
+	l.storeList.lk.Lock()
+	l.storeList.list[ID] = sealtasks.TaskMean[taskType]
+	l.storeList.lk.Unlock()
+	return nil
+}
+func (l *LocalWorker) DeleteStore(ctx context.Context, ID abi.SectorID, taskType sealtasks.TaskType) error {
+	l.storeList.lk.Lock()
+	info, exit := l.storeList.list[ID]
+	if exit && info == sealtasks.TaskMean[taskType] {
+		delete(l.storeList.list, ID)
+	}
+	l.storeList.lk.Unlock()
+	return nil
+}
+
+func (l *LocalWorker) SetWorkerParams(ctx context.Context, key string, val string) error {
+	switch key {
+	case "precommit1max":
+		param, err := strconv.ParseInt(val, 10, 64)
+		if err != nil {
+			return xerrors.Errorf("key is error, string to int failed: %w", err)
+		}
+		l.preCommit1Max = param
+	case "precommit2max":
+		param, err := strconv.ParseInt(val, 10, 64)
+		if err != nil {
+			return xerrors.Errorf("key is error, string to int failed: %w", err)
+		}
+		l.preCommit2Max = param
+	case "commitmax":
+		param, err := strconv.ParseInt(val, 10, 64)
+		if err != nil {
+			return xerrors.Errorf("key is error, string to int failed: %w", err)
+		}
+		l.commitMax = param
+	case "group":
+		l.group = val
+	default:
+		return xerrors.Errorf("this param is not fount: %s", key)
+	}
+	return nil
+}
+
+func (l *LocalWorker) GetWorkerGroup(ctx context.Context) string {
+	return l.group
+}
