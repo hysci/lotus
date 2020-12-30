@@ -92,6 +92,14 @@ func (sm *StorageMinerAPI) WorkerJobs(ctx context.Context) (map[uint64][]storifa
 	return sm.StorageMgr.WorkerJobs(), nil
 }
 
+func (sm *StorageMinerAPI) GetWorker(ctx context.Context) (map[uint64]sectorstorage.WorkerInfo, error) {
+	return sm.StorageMgr.GetWorker(ctx), nil
+}
+
+func (sm *StorageMinerAPI) SetWorkerParam(ctx context.Context, worker uint64, key string, value string) error {
+	return sm.StorageMgr.SetWorkerParam(ctx, worker, key, value)
+}
+
 func (sm *StorageMinerAPI) ActorAddress(context.Context) (address.Address, error) {
 	return sm.Miner.Address(), nil
 }

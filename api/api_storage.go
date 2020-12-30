@@ -16,6 +16,7 @@ import (
 	"github.com/filecoin-project/lotus/extern/sector-storage/fsutil"
 	"github.com/filecoin-project/lotus/extern/sector-storage/stores"
 	"github.com/filecoin-project/lotus/extern/sector-storage/storiface"
+	sectorstorage "github.com/filecoin-project/lotus/extern/sector-storage"
 )
 
 // StorageMiner is a low-level interface to the Filecoin network storage miner node
@@ -64,6 +65,8 @@ type StorageMiner interface {
 	WorkerConnect(context.Context, string) error
 	WorkerStats(context.Context) (map[uint64]storiface.WorkerStats, error)
 	WorkerJobs(context.Context) (map[uint64][]storiface.WorkerJob, error)
+	GetWorker(ctx context.Context) (map[uint64]sectorstorage.WorkerInfo, error)
+	SetWorkerParam(ctx context.Context, worker uint64, key string, value string) error
 
 	// SealingSchedDiag dumps internal sealing scheduler state
 	SealingSchedDiag(context.Context) (interface{}, error)

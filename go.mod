@@ -141,9 +141,9 @@ replace github.com/filecoin-project/lotus => ./
 
 replace github.com/golangci/golangci-lint => github.com/golangci/golangci-lint v1.18.0
 
-replace github.com/filecoin-project/filecoin-ffi => ./extern/filecoin-ffi
+replace github.com/filecoin-project/filecoin-ffi => ../filecoin-ffi
 
-replace github.com/filecoin-project/test-vectors => ./extern/test-vectors
+replace github.com/filecoin-project/test-vectors => ../test-vectors
 
 replace github.com/supranational/blst => ./extern/fil-blst/blst
 

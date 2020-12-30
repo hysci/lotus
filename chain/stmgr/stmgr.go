@@ -65,6 +65,8 @@ type StateManager struct {
 	newVM                func(context.Context, *vm.VMOpts) (*vm.VM, error)
 	preIgnitionGenInfos  *genesisInfo
 	postIgnitionGenInfos *genesisInfo
+	ancestorGenInfo      *genesisInfo
+	creeperGenInfo       *genesisInfo
 }
 
 func NewStateManager(cs *store.ChainStore) *StateManager {
@@ -985,7 +987,7 @@ func (sm *StateManager) setupGenesisActors(ctx context.Context) error {
 		gi.genesisMsigs = append(gi.genesisMsigs, ns)
 	}
 
-	sm.preIgnitionGenInfos = &gi
+	sm.ancestorGenInfo = &gi
 
 	return nil
 }
@@ -993,7 +995,7 @@ func (sm *StateManager) setupGenesisActors(ctx context.Context) error {
 // sets up information about the actors in the genesis state
 // For testnet we use a hardcoded set of multisig states, instead of what's actually in the genesis multisigs
 // We also do not consider ANY account actors (including the faucet)
-func (sm *StateManager) setupPreIgnitionGenesisActorsTestnet(ctx context.Context) error {
+func (sm *StateManager) setupAncestorGenesisActorsTestnet(ctx context.Context) error {
 
 	gi := genesisInfo{}
 
@@ -1030,27 +1032,17 @@ func (sm *StateManager) setupPreIgnitionGenesisActorsTestnet(ctx context.Context
 
 	totalsByEpoch := make(map[abi.ChainEpoch]abi.TokenAmount)
 
-	// 6 months
-	sixMonths := abi.ChainEpoch(183 * builtin0.EpochsInDay)
-	totalsByEpoch[sixMonths] = big.NewInt(49_929_341)
-	totalsByEpoch[sixMonths] = big.Add(totalsByEpoch[sixMonths], big.NewInt(32_787_700))
-
-	// 1 year
-	oneYear := abi.ChainEpoch(365 * builtin0.EpochsInDay)
-	totalsByEpoch[oneYear] = big.NewInt(22_421_712)
-
 	// 2 years
 	twoYears := abi.ChainEpoch(2 * 365 * builtin0.EpochsInDay)
-	totalsByEpoch[twoYears] = big.NewInt(7_223_364)
+	totalsByEpoch[twoYears] = big.NewInt(200_000_000)
 
 	// 3 years
 	threeYears := abi.ChainEpoch(3 * 365 * builtin0.EpochsInDay)
-	totalsByEpoch[threeYears] = big.NewInt(87_637_883)
+	totalsByEpoch[threeYears] = big.NewInt(50_000_000)
 
 	// 6 years
 	sixYears := abi.ChainEpoch(6 * 365 * builtin0.EpochsInDay)
-	totalsByEpoch[sixYears] = big.NewInt(100_000_000)
-	totalsByEpoch[sixYears] = big.Add(totalsByEpoch[sixYears], big.NewInt(300_000_000))
+	totalsByEpoch[sixYears] = big.NewInt(50_000_000)
 
 	gi.genesisMsigs = make([]msig0.State, 0, len(totalsByEpoch))
 	for k, v := range totalsByEpoch {
@@ -1062,14 +1054,13 @@ func (sm *StateManager) setupPreIgnitionGenesisActorsTestnet(ctx context.Context
 		gi.genesisMsigs = append(gi.genesisMsigs, ns)
 	}
 
-	sm.preIgnitionGenInfos = &gi
+	sm.ancestorGenInfo = &gi
 
 	return nil
 }
 
-// sets up information about the actors in the genesis state, post the ignition fork
-func (sm *StateManager) setupPostIgnitionGenesisActors(ctx context.Context) error {
-
+// sets up information about the creeper in the genesis state
+func (sm *StateManager) setupCreeperGenesisActorsTestnet(ctx context.Context) error {
 	gi := genesisInfo{}
 
 	gb, err := sm.cs.GetGenesis()
@@ -1106,43 +1097,37 @@ func (sm *StateManager) setupPostIgnitionGenesisActors(ctx context.Context) erro
 	}
 
 	totalsByEpoch := make(map[abi.ChainEpoch]abi.TokenAmount)
+	totalsStartEpoch := make(map[abi.ChainEpoch]abi.ChainEpoch)
 
-	// 6 months
-	sixMonths := abi.ChainEpoch(183 * builtin0.EpochsInDay)
-	totalsByEpoch[sixMonths] = big.NewInt(49_929_341)
-	totalsByEpoch[sixMonths] = big.Add(totalsByEpoch[sixMonths], big.NewInt(32_787_700))
+	threeDays := abi.ChainEpoch(3 * builtin0.EpochsInDay)
+	totalsByEpoch[threeDays] = big.Mul(big.NewInt(83_333_332), big.NewInt(int64(build.FilecoinPrecision/10)))
+	totalsStartEpoch[threeDays] = abi.ChainEpoch(54720)
 
-	// 1 year
-	oneYear := abi.ChainEpoch(365 * builtin0.EpochsInDay)
-	totalsByEpoch[oneYear] = big.NewInt(22_421_712)
-
-	// 2 years
 	twoYears := abi.ChainEpoch(2 * 365 * builtin0.EpochsInDay)
-	totalsByEpoch[twoYears] = big.NewInt(7_223_364)
+	totalsByEpoch[twoYears] = big.Mul(big.NewInt(1_916_666_666), big.NewInt(int64(build.FilecoinPrecision/10)))
+	totalsStartEpoch[twoYears] = abi.ChainEpoch(135360)
 
-	// 3 years
 	threeYears := abi.ChainEpoch(3 * 365 * builtin0.EpochsInDay)
-	totalsByEpoch[threeYears] = big.NewInt(87_637_883)
+	totalsByEpoch[threeYears] = big.Mul(big.NewInt(50_000_000), big.NewInt(int64(build.FilecoinPrecision)))
+	totalsStartEpoch[threeYears] = abi.ChainEpoch(54720)
 
-	// 6 years
 	sixYears := abi.ChainEpoch(6 * 365 * builtin0.EpochsInDay)
-	totalsByEpoch[sixYears] = big.NewInt(100_000_000)
-	totalsByEpoch[sixYears] = big.Add(totalsByEpoch[sixYears], big.NewInt(300_000_000))
+	totalsByEpoch[sixYears] = big.Mul(big.NewInt(50_000_000), big.NewInt(int64(build.FilecoinPrecision)))
+	totalsStartEpoch[sixYears] = abi.ChainEpoch(54720)
 
 	gi.genesisMsigs = make([]msig0.State, 0, len(totalsByEpoch))
 	for k, v := range totalsByEpoch {
 		ns := msig0.State{
-			// In the pre-ignition logic, we incorrectly set this value in Fil, not attoFil, an off-by-10^18 error
-			InitialBalance: big.Mul(v, big.NewInt(int64(build.FilecoinPrecision))),
+			InitialBalance: v,
 			UnlockDuration: k,
 			PendingTxns:    cid.Undef,
-			// In the pre-ignition logic, the start epoch was 0. This changes in the fork logic of the Ignition upgrade itself.
-			StartEpoch: build.UpgradeLiftoffHeight,
+			// In the ancestor logic, the start epoch was 0. This changes in the fork logic of the creeper upgrade itself.
+			StartEpoch: totalsStartEpoch[k],
 		}
 		gi.genesisMsigs = append(gi.genesisMsigs, ns)
 	}
 
-	sm.postIgnitionGenInfos = &gi
+	sm.creeperGenInfo = &gi
 
 	return nil
 }
@@ -1152,23 +1137,23 @@ func (sm *StateManager) setupPostIgnitionGenesisActors(ctx context.Context) erro
 // - For Accounts, it counts max(currentBalance - genesisBalance, 0).
 func (sm *StateManager) GetFilVested(ctx context.Context, height abi.ChainEpoch, st *state.StateTree) (abi.TokenAmount, error) {
 	vf := big.Zero()
-	if height <= build.UpgradeIgnitionHeight {
-		for _, v := range sm.preIgnitionGenInfos.genesisMsigs {
+	if height <= build.UpgradeCreeperHeight {
+		for _, v := range sm.ancestorGenInfo.genesisMsigs {
 			au := big.Sub(v.InitialBalance, v.AmountLocked(height))
 			vf = big.Add(vf, au)
 		}
 	} else {
-		for _, v := range sm.postIgnitionGenInfos.genesisMsigs {
-			// In the pre-ignition logic, we simply called AmountLocked(height), assuming startEpoch was 0.
-			// The start epoch changed in the Ignition upgrade.
+		for _, v := range sm.creeperGenInfo.genesisMsigs {
+			// In the ancestor logic, we simply called AmountLocked(height), assuming startEpoch was 0.
+			// The start epoch changed in the creeper upgrade.
 			au := big.Sub(v.InitialBalance, v.AmountLocked(height-v.StartEpoch))
 			vf = big.Add(vf, au)
 		}
 	}
 
 	// there should not be any such accounts in testnet (and also none in mainnet?)
-	// continue to use preIgnitionGenInfos, nothing changed at the Ignition epoch
-	for _, v := range sm.preIgnitionGenInfos.genesisActors {
+	// continue to use ancestorGenInfo, nothing changed at the Ignition epoch
+	for _, v := range sm.ancestorGenInfo.genesisActors {
 		act, err := st.GetActor(v.addr)
 		if err != nil {
 			return big.Zero(), xerrors.Errorf("failed to get actor: %w", err)
@@ -1183,9 +1168,9 @@ func (sm *StateManager) GetFilVested(ctx context.Context, height abi.ChainEpoch,
 	// After UpgradeActorsV2Height these funds are accounted for in GetFilReserveDisbursed
 	if height <= build.UpgradeActorsV2Height {
 		// continue to use preIgnitionGenInfos, nothing changed at the Ignition epoch
-		vf = big.Add(vf, sm.preIgnitionGenInfos.genesisPledge)
+		vf = big.Add(vf, sm.ancestorGenInfo.genesisPledge)
 		// continue to use preIgnitionGenInfos, nothing changed at the Ignition epoch
-		vf = big.Add(vf, sm.preIgnitionGenInfos.genesisMarketFunds)
+		vf = big.Add(vf, sm.ancestorGenInfo.genesisMarketFunds)
 	}
 
 	return vf, nil
@@ -1270,16 +1255,16 @@ func GetFilBurnt(ctx context.Context, st *state.StateTree) (abi.TokenAmount, err
 func (sm *StateManager) GetCirculatingSupplyDetailed(ctx context.Context, height abi.ChainEpoch, st *state.StateTree) (api.CirculatingSupply, error) {
 	sm.genesisMsigLk.Lock()
 	defer sm.genesisMsigLk.Unlock()
-	if sm.preIgnitionGenInfos == nil {
-		err := sm.setupPreIgnitionGenesisActorsTestnet(ctx)
+	if sm.ancestorGenInfo == nil {
+		err := sm.setupAncestorGenesisActorsTestnet(ctx)
 		if err != nil {
-			return api.CirculatingSupply{}, xerrors.Errorf("failed to setup pre-ignition genesis information: %w", err)
+			return api.CirculatingSupply{}, xerrors.Errorf("failed to setup ancestor  genesis information: %w", err)
 		}
 	}
-	if sm.postIgnitionGenInfos == nil {
-		err := sm.setupPostIgnitionGenesisActors(ctx)
+	if sm.creeperGenInfo == nil {
+		err := sm.setupCreeperGenesisActorsTestnet(ctx)
 		if err != nil {
-			return api.CirculatingSupply{}, xerrors.Errorf("failed to setup post-ignition genesis information: %w", err)
+			return api.CirculatingSupply{}, xerrors.Errorf("failed to setup creeper genesis information: %w", err)
 		}
 	}
 

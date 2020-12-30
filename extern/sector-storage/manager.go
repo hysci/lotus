@@ -48,6 +48,14 @@ type Worker interface {
 	Closing(context.Context) (<-chan struct{}, error)
 
 	Close() error
+
+	AllowableRange(ctx context.Context, task sealtasks.TaskType) (bool, error)
+	AddRange(ctx context.Context, task sealtasks.TaskType, addType int) error
+	GetWorkerInfo(ctx context.Context) WorkerInfo
+	AddStore(ctx context.Context, ID abi.SectorID, taskType sealtasks.TaskType) error
+	DeleteStore(ctx context.Context, ID abi.SectorID, taskType sealtasks.TaskType) error
+	SetWorkerParams(ctx context.Context, key string, val string) error
+	GetWorkerGroup(ctx context.Context) string
 }
 
 type SectorManager interface {
@@ -85,6 +93,11 @@ type SealerConfig struct {
 	AllowPreCommit2 bool
 	AllowCommit     bool
 	AllowUnseal     bool
+
+	PreCommit1Max int64
+	PreCommit2Max int64
+	CommitMax     int64
+	Group         string
 }
 
 type StorageAuth http.Header
@@ -140,6 +153,10 @@ func New(ctx context.Context, ls stores.LocalStorage, si stores.SectorIndex, cfg
 	err = m.AddWorker(ctx, NewLocalWorker(WorkerConfig{
 		SealProof: cfg.SealProofType,
 		TaskTypes: localTasks,
+		PreCommit1Max: sc.PreCommit1Max,
+		PreCommit2Max: sc.PreCommit2Max,
+		CommitMax:     sc.CommitMax,
+		Group:         sc.Group,
 	}, stor, lstor, si))
 	if err != nil {
 		return nil, xerrors.Errorf("adding local worker: %w", err)

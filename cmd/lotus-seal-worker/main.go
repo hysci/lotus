@@ -149,6 +149,26 @@ var runCmd = &cli.Command{
 			Usage: "used when 'listen' is unspecified. must be a valid duration recognized by golang's time.ParseDuration function",
 			Value: "30m",
 		},
+		&cli.Int64Flag{
+			Name:  "precommit1max",
+			Usage: "Allow the maximum number of simultaneous tasks for precommit1, default value: 0",
+			Value: 0,
+		},
+		&cli.Int64Flag{
+			Name:  "precommit2max",
+			Usage: "Allow the maximum number of simultaneous tasks for precommit2, default value: 0",
+			Value: 0,
+		},
+		&cli.Int64Flag{
+			Name:  "commitmax",
+			Usage: "Allow the maximum number of simultaneous tasks for commit2, default value: 0",
+			Value: 0,
+		},
+		&cli.StringFlag{
+			Name:  "group",
+			Usage: "Worker grouping function, default value: all",
+			Value: "all",
+		},
 	},
 	Before: func(cctx *cli.Context) error {
 		if cctx.IsSet("address") {
@@ -351,7 +371,13 @@ var runCmd = &cli.Command{
 			LocalWorker: sectorstorage.NewLocalWorker(sectorstorage.WorkerConfig{
 				SealProof: spt,
 				TaskTypes: taskTypes,
-				NoSwap:    cctx.Bool("no-swap"),
+
+				PreCommit1Max: cctx.Int64("precommit1max"),
+				PreCommit2Max: cctx.Int64("precommit2max"),
+				CommitMax:     cctx.Int64("commitmax"),
+				Group:         cctx.String("group"),
+
+				NoSwap: cctx.Bool("no-swap"),
 			}, remote, localStore, nodeApi),
 			localStore: localStore,
 			ls:         lr,
@@ -479,6 +505,11 @@ func watchMinerConn(ctx context.Context, cctx *cli.Context, nodeApi api.StorageM
 			fmt.Sprintf("--commit=%t", cctx.Bool("commit")),
 			fmt.Sprintf("--parallel-fetch-limit=%d", cctx.Int("parallel-fetch-limit")),
 			fmt.Sprintf("--timeout=%s", cctx.String("timeout")),
+
+			fmt.Sprintf("--precommit1max=%d", cctx.Int64("precommit1max")),
+			fmt.Sprintf("--precommit2max=%d", cctx.Int64("precommit2max")),
+			fmt.Sprintf("--commitmax=%d", cctx.Int64("commitmax")),
+			fmt.Sprintf("--group=%s", cctx.String("group")),
 		}, os.Environ()); err != nil {
 			fmt.Println(err)
 		}
