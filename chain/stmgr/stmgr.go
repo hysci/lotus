@@ -932,15 +932,6 @@ func (sm *StateManager) setupGenesisVestingSchedule(ctx context.Context) error {
 
 	totalsByEpoch := make(map[abi.ChainEpoch]abi.TokenAmount)
 
-	// 6 months
-	sixMonths := abi.ChainEpoch(183 * builtin.EpochsInDay)
-	totalsByEpoch[sixMonths] = big.NewInt(49_929_341)
-	totalsByEpoch[sixMonths] = big.Add(totalsByEpoch[sixMonths], big.NewInt(32_787_700))
-
-	// 1 year
-	oneYear := abi.ChainEpoch(365 * builtin.EpochsInDay)
-	totalsByEpoch[oneYear] = big.NewInt(22_421_712)
-
 	// 2 years
 	twoYears := abi.ChainEpoch(2 * 365 * builtin.EpochsInDay)
 	totalsByEpoch[twoYears] = big.NewInt(7_223_364)
@@ -1046,13 +1037,6 @@ func (sm *StateManager) GetFilVested(ctx context.Context, height abi.ChainEpoch,
 	if height <= build.UpgradeCreeperHeight {
 		for _, v := range sm.preIgnitionVesting {
 			au := big.Sub(v.InitialBalance, v.AmountLocked(height))
-			vf = big.Add(vf, au)
-		}
-	} else if height <= build.UpgradeCalicoHeight {
-		for _, v := range sm.postIgnitionVesting {
-			// In the pre-ignition logic, we simply called AmountLocked(height), assuming startEpoch was 0.
-			// The start epoch changed in the Ignition upgrade.
-			au := big.Sub(v.InitialBalance, v.AmountLocked(height-v.StartEpoch))
 			vf = big.Add(vf, au)
 		}
 	} else {
