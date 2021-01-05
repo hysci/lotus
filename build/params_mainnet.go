@@ -32,16 +32,16 @@ const AmplifierHeight = 172870
 
 var UpgradeActorsV2Height = abi.ChainEpoch(10_000_001)
 
-const UpgradeTapeHeight = 140760
+const UpgradeTapeHeight = 10_000_002
 
 // This signals our tentative epoch for mainnet launch. Can make it later, but not earlier.
 // Miners, clients, developers, custodians all need time to prepare.
 // We still have upgrades and state changes to do, but can happen after signaling timing here.
-const UpgradeLiftoffHeight = 10_000_002
+const UpgradeLiftoffHeight = 10_000_003
 
-const UpgradeKumquatHeight = 170000
+const UpgradeKumquatHeight = 10_000_004
 
-const UpgradeCalicoHeight = 265200
+const UpgradeCalicoHeight = 10_000_005
 const UpgradePersianHeight = UpgradeCalicoHeight + (builtin2.EpochsInHour * 60)
 
 func init() {
