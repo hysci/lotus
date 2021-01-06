@@ -211,7 +211,7 @@ var ResourceTable = map[sealtasks.TaskType]map[abi.RegisteredSealProof]Resources
 			MaxParallelism: -1,
 
 			BaseMinMemory: 4 << 30,
-        },
+		},
 		abi.RegisteredSealProof_StackedDrg16GiBV1: Resources{
 			MaxMemory: 16 << 30,
 			MinMemory: 16 << 30,
@@ -269,7 +269,7 @@ var ResourceTable = map[sealtasks.TaskType]map[abi.RegisteredSealProof]Resources
 			MaxParallelism: 0,
 
 			BaseMinMemory: 1 << 30,
-        },
+		},
 		abi.RegisteredSealProof_StackedDrg16GiBV1: Resources{
 			MaxMemory: 1 << 30,
 			MinMemory: 1 << 30,
@@ -330,16 +330,16 @@ var ResourceTable = map[sealtasks.TaskType]map[abi.RegisteredSealProof]Resources
 			MinMemory: 4 << 30,
 
 			MaxParallelism: 1,
-			CanGPU:  true,
+			CanGPU:         true,
 
 			BaseMinMemory: 4 << 30,
-        },
+		},
 		abi.RegisteredSealProof_StackedDrg16GiBV1: Resources{
 			MaxMemory: 50 << 30,
 			MinMemory: 16 << 30,
 
 			MaxParallelism: 1,
-			CanGPU:  true,
+			CanGPU:         true,
 
 			BaseMinMemory: 16 << 30,
 		},
@@ -386,7 +386,7 @@ var ResourceTable = map[sealtasks.TaskType]map[abi.RegisteredSealProof]Resources
 			MinMemory: 1 << 20,
 
 			MaxParallelism: 0,
-			CanGPU:  false,
+			CanGPU:         false,
 
 			BaseMinMemory: 0,
 		},
@@ -395,16 +395,16 @@ var ResourceTable = map[sealtasks.TaskType]map[abi.RegisteredSealProof]Resources
 			MinMemory: 1 << 20,
 
 			MaxParallelism: 0,
-			CanGPU:  false,
+			CanGPU:         false,
 
 			BaseMinMemory: 0,
-       		 },
+		},
 		abi.RegisteredSealProof_StackedDrg16GiBV1: Resources{
 			MaxMemory: 1 << 20,
 			MinMemory: 1 << 20,
 
 			MaxParallelism: 0,
-			CanGPU:  false,
+			CanGPU:         false,
 
 			BaseMinMemory: 0,
 		},
@@ -422,5 +422,8 @@ func init() {
 		m[abi.RegisteredSealProof_StackedDrg512MiBV1_1] = m[abi.RegisteredSealProof_StackedDrg512MiBV1]
 		m[abi.RegisteredSealProof_StackedDrg32GiBV1_1] = m[abi.RegisteredSealProof_StackedDrg32GiBV1]
 		m[abi.RegisteredSealProof_StackedDrg64GiBV1_1] = m[abi.RegisteredSealProof_StackedDrg64GiBV1]
+
+		m[abi.RegisteredSealProof_StackedDrg4GiBV1_1] = m[abi.RegisteredSealProof_StackedDrg4GiBV1]
+		m[abi.RegisteredSealProof_StackedDrg16GiBV1_1] = m[abi.RegisteredSealProof_StackedDrg16GiBV1]
 	}
 }
