@@ -197,15 +197,20 @@ var DaemonCmd = &cli.Command{
 		if err := r.Init(repo.FullNode); err != nil && err != repo.ErrRepoExists {
 			return xerrors.Errorf("repo init error: %w", err)
 		}
-
+		
+                passwdPath, err := homedir.Expand(cctx.String("repo"))
+                if err != nil {
+                       return err
+                }
+		
 		if cctx.Bool("setup-passwd") {
 			passwd := wallet.Prompt("Enter your PIN:\n")
-			err := wallet.SetupPasswd([]byte(passwd), cctx.String("repo") + "/keystore/passwd")
+			err := wallet.SetupPasswd([]byte(passwd), passwdPath + "/keystore/passwd")
 			if err != nil {
 				return err
 			}
 		} else {
-			ok := wallet.GetSetupState(cctx.String("repo") + "/keystore/passwd")
+			ok := wallet.GetSetupState(passwdPath + "/keystore/passwd")
 			if !ok {
 				log.Info("Passwd is not setup")
 			} else {
