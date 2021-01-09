@@ -116,7 +116,12 @@ func (a *WalletAPI) WalletImport(ctx context.Context, ki *types.KeyInfo) (addres
 	return a.Wallet.Import(ki)
 }
 
-func (a *WalletAPI) WalletDelete(ctx context.Context, addr address.Address) error {
+func (a *WalletAPI) WalletDelete(ctx context.Context, addr address.Address, passwd string) error {
+	oldPasswd := wallet.WalletPasswd
+        wallet.WalletPasswd = passwd
+        defer func() {
+                wallet.WalletPasswd = oldPasswd
+        }()
 	return a.Wallet.DeleteKey(addr)
 }
 

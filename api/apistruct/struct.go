@@ -147,7 +147,7 @@ type FullNodeStruct struct {
 		WalletSetDefault      func(context.Context, address.Address) error                                                 `perm:"admin"`
 		WalletExport          func(context.Context, address.Address, string) (*types.KeyInfo, error)                       `perm:"admin"`
 		WalletImport          func(context.Context, *types.KeyInfo) (address.Address, error)                               `perm:"admin"`
-		WalletDelete          func(context.Context, address.Address) error                                                 `perm:"write"`
+		WalletDelete          func(context.Context, address.Address, string) error                                         `perm:"write"`
 		WalletValidateAddress func(context.Context, string) (address.Address, error)                                       `perm:"read"`
 		WalletLock            func(context.Context) error                                                                  `perm:"admin"`
 		WalletUnlock          func(context.Context, string) error                                                          `perm:"admin"`
@@ -669,8 +669,8 @@ func (c *FullNodeStruct) WalletImport(ctx context.Context, ki *types.KeyInfo) (a
 	return c.Internal.WalletImport(ctx, ki)
 }
 
-func (c *FullNodeStruct) WalletDelete(ctx context.Context, addr address.Address) error {
-	return c.Internal.WalletDelete(ctx, addr)
+func (c *FullNodeStruct) WalletDelete(ctx context.Context, addr address.Address, passwd string) error {
+	return c.Internal.WalletDelete(ctx, addr, passwd)
 }
 
 func (c *FullNodeStruct) WalletValidateAddress(ctx context.Context, str string) (address.Address, error) {

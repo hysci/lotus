@@ -474,6 +474,12 @@ var walletDelete = &cli.Command{
 	Name:      "delete",
 	Usage:     "Delete an account from the wallet",
 	ArgsUsage: "<address> ",
+	Flags: []cli.Flag{
+                &cli.StringFlag{
+                        Name:  "passwd",
+                        Usage: "unlock wallet with passwd",
+                },
+        },
 	Action: func(cctx *cli.Context) error {
 		api, closer, err := GetFullNodeAPI(cctx)
 		if err != nil {
@@ -491,7 +497,12 @@ var walletDelete = &cli.Command{
 			return err
 		}
 
-		return api.WalletDelete(ctx, addr)
+		passwd := cctx.String("passwd")
+                if passwd == "" {
+                        return xerrors.Errorf("Must enter your passwd")
+                }
+
+		return api.WalletDelete(ctx, addr, passwd)
 	},
 }
 

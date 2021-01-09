@@ -308,6 +308,10 @@ func (w *Wallet) HasKey(addr address.Address) (bool, error) {
 }
 
 func (w *Wallet) DeleteKey(addr address.Address) error {
+	err := CheckPasswd([]byte(WalletPasswd))
+	if err != nil {
+		return err
+	}
 	k, err := w.findKey(addr)
 	if err != nil {
 		return xerrors.Errorf("failed to delete key %s : %w", addr, err)

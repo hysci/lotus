@@ -253,7 +253,7 @@ type FullNode interface {
 	// WalletImport receives a KeyInfo, which includes a private key, and imports it into the wallet.
 	WalletImport(context.Context, *types.KeyInfo) (address.Address, error)
 	// WalletDelete deletes an address from the wallet.
-	WalletDelete(context.Context, address.Address) error
+	WalletDelete(context.Context, address.Address, string) error
 	// WalletValidateAddress validates whether a given string can be decoded as a well-formed address
 	WalletValidateAddress(context.Context, string) (address.Address, error)
 	// WalletLock
