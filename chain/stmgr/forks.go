@@ -523,19 +523,19 @@ func UpgradeRefuel(ctx context.Context, sm *StateManager, cb ExecCallback, root 
 		return cid.Undef, xerrors.Errorf("getting state tree: %w", err)
 	}
 
-	err = resetMultisigVesting0(ctx, store, tree, builtin.SaftAddress, 0, 0, big.Zero())
-	if err != nil {
-		return cid.Undef, xerrors.Errorf("tweaking msig vesting: %w", err)
-	}
+	// err = resetMultisigVesting0(ctx, store, tree, builtin.SaftAddress, 0, 0, big.Zero())
+	// if err != nil {
+	// 	return cid.Undef, xerrors.Errorf("0 tweaking msig vesting: %w", err)
+	// }
 
 	err = resetMultisigVesting0(ctx, store, tree, builtin.ReserveAddress, 0, 0, big.Zero())
 	if err != nil {
-		return cid.Undef, xerrors.Errorf("tweaking msig vesting: %w", err)
+		return cid.Undef, xerrors.Errorf("1 tweaking msig vesting: %w", err)
 	}
 
 	err = resetMultisigVesting0(ctx, store, tree, builtin.RootVerifierAddress, 0, 0, big.Zero())
 	if err != nil {
-		return cid.Undef, xerrors.Errorf("tweaking msig vesting: %w", err)
+		return cid.Undef, xerrors.Errorf("2 tweaking msig vesting: %w", err)
 	}
 
 	return tree.Flush(ctx)
