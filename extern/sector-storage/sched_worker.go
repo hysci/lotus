@@ -6,6 +6,7 @@ import (
 
 	"golang.org/x/xerrors"
 
+	sealtasks "github.com/filecoin-project/lotus/extern/sector-storage/sealtasks"
 	"github.com/filecoin-project/lotus/extern/sector-storage/stores"
 )
 
@@ -391,6 +392,10 @@ func (sw *schedWorker) startProcessingTask(taskDone chan struct{}, req *workerRe
 
 	needRes := ResourceTable[req.taskType][req.sector.ProofType]
 
+	sh.execSectorWorker.lk.Lock()
+	sh.execSectorWorker.group[req.sector] = w.w.GetWorkerGroup(req.ctx)
+	sh.execSectorWorker.lk.Unlock()
+
 	w.lk.Lock()
 	w.preparing.add(w.info.Resources, needRes)
 	w.lk.Unlock()
@@ -402,6 +407,9 @@ func (sw *schedWorker) startProcessingTask(taskDone chan struct{}, req *workerRe
 
 		if err != nil {
 			w.lk.Lock()
+			_ = w.w.AddRange(req.ctx, req.taskType, 2)
+			_ = w.w.DeleteStore(req.ctx, req.sector, req.taskType)
+
 			w.preparing.free(w.info.Resources, needRes)
 			w.lk.Unlock()
 			sh.workersLk.Unlock()
@@ -449,7 +457,16 @@ func (sw *schedWorker) startProcessingTask(taskDone chan struct{}, req *workerRe
 			return nil
 		})
 
-		sh.workersLk.Unlock()
+		w.lk.Lock()
+		_ = w.w.AddRange(req.ctx, req.taskType, 2)
+		_ = w.w.DeleteStore(req.ctx, req.sector, req.taskType)
+		w.lk.Unlock()
+
+		if req.taskType == sealtasks.TTFetch {
+			sh.execSectorWorker.lk.Lock()
+			delete(sh.execSectorWorker.group, req.sector)
+			sh.execSectorWorker.lk.Unlock()
+		}
 
 		// This error should always be nil, since nothing is setting it, but just to be safe:
 		if err != nil {
