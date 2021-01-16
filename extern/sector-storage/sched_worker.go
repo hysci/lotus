@@ -393,7 +393,7 @@ func (sw *schedWorker) startProcessingTask(taskDone chan struct{}, req *workerRe
 	needRes := ResourceTable[req.taskType][req.sector.ProofType]
 
 	sh.execSectorWorker.lk.Lock()
-	sh.execSectorWorker.group[req.sector] = w.w.GetWorkerGroup(req.ctx)
+	sh.execSectorWorker.group[req.sector.ID] = w.workerRpc.GetWorkerGroup(req.ctx)
 	sh.execSectorWorker.lk.Unlock()
 
 	w.lk.Lock()
@@ -407,8 +407,8 @@ func (sw *schedWorker) startProcessingTask(taskDone chan struct{}, req *workerRe
 
 		if err != nil {
 			w.lk.Lock()
-			_ = w.w.AddRange(req.ctx, req.taskType, 2)
-			_ = w.w.DeleteStore(req.ctx, req.sector, req.taskType)
+			_ = w.workerRpc.AddRange(req.ctx, req.taskType, 2)
+			_ = w.workerRpc.DeleteStore(req.ctx, req.sector.ID, req.taskType)
 
 			w.preparing.free(w.info.Resources, needRes)
 			w.lk.Unlock()
@@ -458,13 +458,13 @@ func (sw *schedWorker) startProcessingTask(taskDone chan struct{}, req *workerRe
 		})
 
 		w.lk.Lock()
-		_ = w.w.AddRange(req.ctx, req.taskType, 2)
-		_ = w.w.DeleteStore(req.ctx, req.sector, req.taskType)
+		_ = w.workerRpc.AddRange(req.ctx, req.taskType, 2)
+		_ = w.workerRpc.DeleteStore(req.ctx, req.sector.ID, req.taskType)
 		w.lk.Unlock()
 
 		if req.taskType == sealtasks.TTFetch {
 			sh.execSectorWorker.lk.Lock()
-			delete(sh.execSectorWorker.group, req.sector)
+			delete(sh.execSectorWorker.group, req.sector.ID)
 			sh.execSectorWorker.lk.Unlock()
 		}
 
