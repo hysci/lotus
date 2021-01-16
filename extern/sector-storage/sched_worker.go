@@ -468,6 +468,8 @@ func (sw *schedWorker) startProcessingTask(taskDone chan struct{}, req *workerRe
 			sh.execSectorWorker.lk.Unlock()
 		}
 
+		sh.workersLk.Unlock()
+		
 		// This error should always be nil, since nothing is setting it, but just to be safe:
 		if err != nil {
 			log.Errorf("error executing worker (withResources): %+v", err)
