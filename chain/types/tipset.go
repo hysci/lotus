@@ -159,6 +159,10 @@ func (ts *TipSet) Blocks() []*BlockHeader {
 	return ts.blks
 }
 
+func (ts *TipSet) IsNull() bool {
+	return len(ts.blks) == 0
+}
+
 func (ts *TipSet) Equals(ots *TipSet) bool {
 	if ts == nil && ots == nil {
 		return true
