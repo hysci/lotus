@@ -56,7 +56,7 @@ func (sh *scheduler) runWorker(ctx context.Context, w Worker) error {
 	_, exist := sh.workers[wid]
 	if exist {
 		log.Warnw("duplicated worker added", "id", wid)
-
+		sh.workersLk.Unlock()
 		// this is ok, we're already handling this worker in a different goroutine
 		return nil
 	}
@@ -469,7 +469,7 @@ func (sw *schedWorker) startProcessingTask(taskDone chan struct{}, req *workerRe
 		}
 
 		sh.workersLk.Unlock()
-		
+
 		// This error should always be nil, since nothing is setting it, but just to be safe:
 		if err != nil {
 			log.Errorf("error executing worker (withResources): %+v", err)
