@@ -326,7 +326,7 @@ var setWorkerParamsCmd = &cli.Command{
 	Name:  "setworkerparam",
 	Usage: "set worker param",
 	Flags: []cli.Flag{
-		&cli.Uint64Flag{
+		&cli.StringFlag{
 			Name: "worker",
 		},
 		&cli.StringFlag{
