@@ -446,6 +446,11 @@ func (sw *schedWorker) startProcessingTask(taskDone chan struct{}, req *workerRe
 			// Do the work!
 			err = req.work(req.ctx, sh.workTracker.worker(sw.wid, w.workerRpc))
 
+			w.lk.Lock()
+			_ = w.workerRpc.AddRange(req.ctx, req.taskType, 2)
+			_ = w.workerRpc.DeleteStore(req.ctx, req.sector.ID, req.taskType)
+			w.lk.Unlock()
+
 			select {
 			case req.ret <- workerResponse{err: err}:
 			case <-req.ctx.Done():
@@ -456,11 +461,6 @@ func (sw *schedWorker) startProcessingTask(taskDone chan struct{}, req *workerRe
 
 			return nil
 		})
-
-		w.lk.Lock()
-		_ = w.workerRpc.AddRange(req.ctx, req.taskType, 2)
-		_ = w.workerRpc.DeleteStore(req.ctx, req.sector.ID, req.taskType)
-		w.lk.Unlock()
 
 		if req.taskType == sealtasks.TTFetch {
 			sh.execSectorWorker.lk.Lock()
