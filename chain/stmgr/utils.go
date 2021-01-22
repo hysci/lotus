@@ -159,7 +159,7 @@ func GetMinerSectorSet(ctx context.Context, sm *StateManager, ts *types.TipSet, 
 	return mas.LoadSectors(snos)
 }
 
-func GetSectorsForWinningPoSt(ctx context.Context, pv ffiwrapper.Verifier, sm *StateManager, st cid.Cid, maddr address.Address, rand abi.PoStRandomness) ([]proof0.SectorInfo, error) {
+func GetSectorsForWinningPoSt(ctx context.Context, nv network.Version, pv ffiwrapper.Verifier, sm *StateManager, st cid.Cid, maddr address.Address, rand abi.PoStRandomness) ([]proof0.SectorInfo, error) {
 	act, err := sm.LoadActorRaw(ctx, maddr, st)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to load miner actor: %w", err)
@@ -202,7 +202,7 @@ func GetSectorsForWinningPoSt(ctx context.Context, pv ffiwrapper.Verifier, sm *S
 		return nil, xerrors.Errorf("getting miner info: %w", err)
 	}
 
-	spt, err := ffiwrapper.SealProofTypeFromSectorSize(info.SectorSize)
+	spt, err := ffiwrapper.SealProofTypeFromSectorSizeForAddSector(info.SectorSize, nv)
 	if err != nil {
 		return nil, xerrors.Errorf("getting seal proof type: %w", err)
 	}
@@ -486,7 +486,9 @@ func MinerGetBaseInfo(ctx context.Context, sm *StateManager, bcs beacon.Schedule
 		return nil, xerrors.Errorf("failed to get randomness for winning post: %w", err)
 	}
 
-	sectors, err := GetSectorsForWinningPoSt(ctx, pv, sm, lbst, maddr, prand)
+	nv := sm.GetNtwkVersion(ctx, ts.Height())
+	sectors, err := GetSectorsForWinningPoSt(ctx, nv, pv, sm, lbst, maddr, prand)
+	
 	if err != nil {
 		return nil, xerrors.Errorf("getting winning post proving set: %w", err)
 	}
@@ -624,7 +626,7 @@ func MinerEligibleToMine(ctx context.Context, sm *StateManager, addr address.Add
 	hmp, err := minerHasMinPower(ctx, sm, addr, lookbackTs)
 
 	// TODO: We're blurring the lines between a "runtime network version" and a "Lotus upgrade epoch", is that unavoidable?
-	if sm.GetNtwkVersion(ctx, baseTs.Height()) <= network.Version3 {
+	if sm.GetNtwkVersion(ctx, baseTs.Height()) <= network.Version4 {
 		return hmp, err
 	}
 

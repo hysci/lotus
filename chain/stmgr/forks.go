@@ -76,13 +76,17 @@ func DefaultUpgradeSchedule() UpgradeSchedule {
 		Network:   network.Version3,
 		Migration: UpgradeRefuel,
 	}, {
-		Height:    build.UpgradeActorsV2Height,
+		Height:    build.UpgradeAddNewSectorSize,
 		Network:   network.Version4,
+		Migration: nil,
+	}, {
+		Height:    build.UpgradeActorsV2Height,
+		Network:   network.Version5,
 		Expensive: true,
 		Migration: UpgradeActorsV2,
 	}, {
 		Height:    build.UpgradeLiftoffHeight,
-		Network:   network.Version4,
+		Network:   network.Version6,
 		Migration: UpgradeLiftoff,
 	}}
 

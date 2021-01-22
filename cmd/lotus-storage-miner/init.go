@@ -419,6 +419,15 @@ func storageMinerInit(ctx context.Context, cctx *cli.Context, api lapi.FullNode,
 		return err
 	}
 
+	tok, err := api.ChainHead(ctx)
+	if err != nil {
+		return xerrors.Errorf("failed get chain head: %w", err)
+	}
+	nv, err := api.StateNetworkVersion(ctx, tok.Key())
+	if err != nil {
+		return xerrors.Errorf("failed get network version: %w", err)
+	}
+
 	var addr address.Address
 	if act := cctx.String("actor"); act != "" {
 		a, err := address.NewFromString(act)
@@ -431,7 +440,7 @@ func storageMinerInit(ctx context.Context, cctx *cli.Context, api lapi.FullNode,
 				return err
 			}
 
-			spt, err := ffiwrapper.SealProofTypeFromSectorSize(ssize)
+			spt, err := ffiwrapper.SealProofTypeFromSectorSizeForAddSector(ssize, nv)
 			if err != nil {
 				return err
 			}
@@ -634,7 +643,12 @@ func createStorageMiner(ctx context.Context, api lapi.FullNode, peerid peer.ID, 
 		return address.Undef, err
 	}
 
-	spt, err := ffiwrapper.SealProofTypeFromSectorSize(abi.SectorSize(ssize))
+	nv, err := api.StateNetworkVersion(ctx, types.EmptyTSK)
+	if err != nil {
+		return address.Undef, xerrors.Errorf("getting network version: %w", err)
+	}
+
+	spt, err := ffiwrapper.SealProofTypeFromSectorSizeForAddSector(abi.SectorSize(ssize), nv)
 	if err != nil {
 		return address.Undef, err
 	}

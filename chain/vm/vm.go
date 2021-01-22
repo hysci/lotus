@@ -132,7 +132,7 @@ func (vm *VM) makeRuntime(ctx context.Context, msg *types.Message, origin addres
 	}
 	vmm.From = resF
 
-	if vm.ntwkVersion(ctx, vm.blockHeight) <= network.Version3 {
+	if vm.ntwkVersion(ctx, vm.blockHeight) <= network.Version4 {
 		rt.Message = &vmm
 	} else {
 		resT, _ := rt.ResolveAddress(msg.To)
@@ -270,7 +270,7 @@ func (vm *VM) send(ctx context.Context, msg *types.Message, parent *Runtime,
 					return nil, aerrors.Wrapf(err, "could not create account")
 				}
 				toActor = a
-				if vm.ntwkVersion(ctx, vm.blockHeight) <= network.Version3 {
+				if vm.ntwkVersion(ctx, vm.blockHeight) <= network.Version4 {
 					// Leave the rt.Message as is
 				} else {
 					nmsg := Message{
