@@ -12,6 +12,7 @@ import (
 	"github.com/filecoin-project/go-state-types/big"
 	"github.com/filecoin-project/go-state-types/crypto"
 	"github.com/filecoin-project/go-state-types/dline"
+	"github.com/filecoin-project/go-state-types/network"
 	"github.com/ipfs/go-cid"
 
 	"go.opencensus.io/trace"
@@ -402,6 +403,11 @@ func (s *WindowPoStScheduler) checkNextFaults(ctx context.Context, dlIdx uint64,
 }
 
 func (s *WindowPoStScheduler) runPost(ctx context.Context, di dline.Info, ts *types.TipSet) ([]miner.SubmitWindowedPoStParams, error) {
+	nv, err := s.api.StateNetworkVersion(ctx, ts.Key())
+	if err != nil {
+			return nil, xerrors.Errorf("failed to get network version: %w", err)
+	}
+	
 	ctx, span := trace.StartSpan(ctx, "storage.runPost")
 	defer span.End()
 
@@ -485,7 +491,7 @@ func (s *WindowPoStScheduler) runPost(ctx context.Context, di dline.Info, ts *ty
 
 	// Split partitions into batches, so as not to exceed the number of sectors
 	// allowed in a single message
-	partitionBatches, err := s.batchPartitions(partitions)
+	partitionBatches, err := s.batchPartitions(partitions, nv)
 	if err != nil {
 		return nil, err
 	}
@@ -625,9 +631,9 @@ func (s *WindowPoStScheduler) runPost(ctx context.Context, di dline.Info, ts *ty
 	return posts, nil
 }
 
-func (s *WindowPoStScheduler) batchPartitions(partitions []api.Partition) ([][]api.Partition, error) {
+func (s *WindowPoStScheduler) batchPartitions(partitions []api.Partition, nv network.Version) ([][]api.Partition, error) {
 	// Get the number of sectors allowed in a partition, for this proof size
-	sectorsPerPartition, err := builtin0.PoStProofWindowPoStPartitionSectors(s.proofType)
+	sectorsPerPartition, err := builtin0.PoStProofWindowPoStPartitionSectors(s.proofType, nv)
 	if err != nil {
 		return nil, xerrors.Errorf("getting sectors per partition: %w", err)
 	}

@@ -76,9 +76,9 @@ func DefaultUpgradeSchedule() UpgradeSchedule {
 		Network:   network.Version3,
 		Migration: UpgradeRefuel,
 	}, {
-		Height:    build.UpgradeAddNewSectorSize,
+		Height:    build.UpgradeAddNewSectorSizeHeight,
 		Network:   network.Version4,
-		Migration: nil,
+		Migration: UpgradeAddNewSectorSize,
 	}, {
 		Height:    build.UpgradeActorsV2Height,
 		Network:   network.Version5,
@@ -498,6 +498,75 @@ func UpgradeRefuel(ctx context.Context, sm *StateManager, cb ExecCallback, root 
 	err = resetMultisigVesting(ctx, store, tree, builtin.RootVerifierAddress, 0, 0, big.Zero())
 	if err != nil {
 		return cid.Undef, xerrors.Errorf("tweaking msig vesting: %w", err)
+	}
+
+	return tree.Flush(ctx)
+}
+
+func UpgradeAddNewSectorSize(ctx context.Context, sm *StateManager, cb ExecCallback, root cid.Cid, epoch abi.ChainEpoch, ts *types.TipSet) (cid.Cid, error) {
+	if build.UpgradeActorsV2Height <= epoch {
+		return cid.Undef, xerrors.Errorf("UpgradeActorsV2 height must be beyond AddNewSectorSize height")
+	}
+
+	tree, err := sm.StateTree(root)
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("getting state tree: %w", err)
+	}
+
+	type transfer struct {
+		From address.Address
+		To   address.Address
+		Amt  abi.TokenAmount
+	}
+
+	var transfers []transfer
+
+	err = tree.ForEach(func(addr address.Address, act *types.Actor) error {
+		switch act.Code {
+		case builtin0.StorageMinerActorCodeID:
+			mi, err := StateMinerInfo(ctx, sm, ts, addr)
+			if err != nil {
+				return xerrors.Errorf("failed to load miner info: %w", err)
+			}
+			
+			if abi.SealProofInfos[abi.RegisteredSealProof_StackedDrg4GiBV1].SectorSize != mi.SectorSize {
+				var st miner0.State
+				if err := sm.ChainStore().Store(ctx).Get(ctx, act.Head, &st); err != nil {
+					return xerrors.Errorf("failed to load miner state: %w", err)
+				}
+				
+				var available abi.TokenAmount
+				{
+					defer func() {
+						if err := recover(); err != nil {
+							log.Warnf("Get available balance failed (%s, %s, %s): %s", addr, act.Head, act.Balance, err)
+						}
+						available = abi.NewTokenAmount(0)
+					}()
+					// this panics if the miner doesnt have enough funds to cover their locked pledge
+					available = st.GetAvailableBalance(act.Balance)
+				}
+
+				transfers = append(transfers, transfer{
+					From: addr,
+					To:   builtin0.BurntFundsActorAddr,
+					Amt:  available,
+				})
+			}
+		}
+		return nil
+	})
+
+	for _, t := range transfers {
+		if err := doTransfer(cb, tree, t.From, t.To, t.Amt); err != nil {
+			return cid.Undef, xerrors.Errorf("transfer %s %s->%s failed: %w", t.Amt, t.From, t.To, err)
+		}
+	}
+
+	for _, t := range transfers {
+		if err := tree.DeleteActor(t.From); err != nil {
+			return cid.Undef, xerrors.Errorf("failed to delet miner : %w", err)
+		}
 	}
 
 	return tree.Flush(ctx)
