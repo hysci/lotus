@@ -159,7 +159,7 @@ func (s *WindowPoStScheduler) runSubmitPoST(
 	commEpoch := deadline.Open
 	if ver, err := s.api.StateNetworkVersion(ctx, types.EmptyTSK); err != nil {
 		log.Errorw("failed to get network version to determine PoSt epoch randomness lookback", "error", err)
-	} else if ver >= network.Version4 {
+	} else if ver >= network.Version5 {
 		commEpoch = deadline.Challenge
 	}
 

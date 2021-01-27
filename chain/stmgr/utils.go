@@ -170,7 +170,7 @@ func GetSectorsForWinningPoSt(ctx context.Context, nv network.Version, pv ffiwra
 	}
 
 	var provingSectors bitfield.BitField
-	if nv < network.Version7 {
+	if nv < network.Version8 {
 		allSectors, err := miner.AllPartSectors(mas, miner.Partition.AllSectors)
 		if err != nil {
 			return nil, xerrors.Errorf("get all sectors: %w", err)
@@ -647,7 +647,7 @@ func MinerEligibleToMine(ctx context.Context, sm *StateManager, addr address.Add
 	hmp, err := minerHasMinPower(ctx, sm, addr, lookbackTs)
 
 	// TODO: We're blurring the lines between a "runtime network version" and a "Lotus upgrade epoch", is that unavoidable?
-	if sm.GetNtwkVersion(ctx, baseTs.Height()) <= network.Version3 {
+	if sm.GetNtwkVersion(ctx, baseTs.Height()) <= network.Version4 {
 		return hmp, err
 	}
 
