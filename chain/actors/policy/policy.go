@@ -131,8 +131,8 @@ func GetMaxSectorExpirationExtension() abi.ChainEpoch {
 }
 
 // TODO: we'll probably need to abstract over this better in the future.
-func GetMaxPoStPartitions(p abi.RegisteredPoStProof) (int, error) {
-	sectorsPerPart, err := builtin2.PoStProofWindowPoStPartitionSectors(p)
+func GetMaxPoStPartitions(p abi.RegisteredPoStProof, nv network.Version) (int, error) {
+	sectorsPerPart, err := builtin2.PoStProofWindowPoStPartitionSectors(p, nv)
 	if err != nil {
 		return 0, err
 	}
