@@ -562,6 +562,10 @@ func UpgradeAddNewSectorSize(ctx context.Context, sm *StateManager, cb ExecCallb
 	}
 
 	var transfers []transfer
+	subcalls := make([]types.ExecutionTrace, 0)
+	transferCb := func(trace types.ExecutionTrace) {
+		subcalls = append(subcalls, trace)
+	}
 
 	err = tree.ForEach(func(addr address.Address, act *types.Actor) error {
 		switch act.Code {
@@ -600,7 +604,7 @@ func UpgradeAddNewSectorSize(ctx context.Context, sm *StateManager, cb ExecCallb
 	})
 
 	for _, t := range transfers {
-		if err := doTransfer(cb, tree, t.From, t.To, t.Amt); err != nil {
+		if err := doTransfer(tree, t.From, t.To, t.Amt, transferCb); err != nil {
 			return cid.Undef, xerrors.Errorf("transfer %s %s->%s failed: %w", t.Amt, t.From, t.To, err)
 		}
 	}
