@@ -78,7 +78,7 @@ func DefaultUpgradeSchedule() UpgradeSchedule {
 	}, {
 		Height:    build.UpgradeHogwartsHeight,
 		Network:   network.Version4,
-		Migration: UpgradeAddNewSectorSize,
+		Migration: UpgradeHogwarts,
 	}, {
 		Height:    build.UpgradeActorsV2Height,
 		Network:   network.Version5,
@@ -503,7 +503,7 @@ func UpgradeRefuel(ctx context.Context, sm *StateManager, cb ExecCallback, root 
 	return tree.Flush(ctx)
 }
 
-func UpgradeAddNewSectorSize(ctx context.Context, sm *StateManager, cb ExecCallback, root cid.Cid, epoch abi.ChainEpoch, ts *types.TipSet) (cid.Cid, error) {
+func UpgradeHogwarts(ctx context.Context, sm *StateManager, cb ExecCallback, root cid.Cid, epoch abi.ChainEpoch, ts *types.TipSet) (cid.Cid, error) {
 	if build.UpgradeActorsV2Height <= epoch {
 		return cid.Undef, xerrors.Errorf("UpgradeActorsV2 height must be beyond AddNewSectorSize height")
 	}
