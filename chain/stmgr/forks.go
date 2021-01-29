@@ -76,7 +76,7 @@ func DefaultUpgradeSchedule() UpgradeSchedule {
 		Network:   network.Version3,
 		Migration: UpgradeRefuel,
 	}, {
-		Height:    build.UpgradeAddNewSectorSizeHeight,
+		Height:    build.UpgradeHogwartsHeight,
 		Network:   network.Version4,
 		Migration: UpgradeAddNewSectorSize,
 	}, {
@@ -528,13 +528,13 @@ func UpgradeAddNewSectorSize(ctx context.Context, sm *StateManager, cb ExecCallb
 			if err != nil {
 				return xerrors.Errorf("failed to load miner info: %w", err)
 			}
-			
+
 			if abi.SealProofInfos[abi.RegisteredSealProof_StackedDrg4GiBV1].SectorSize != mi.SectorSize {
 				var st miner0.State
 				if err := sm.ChainStore().Store(ctx).Get(ctx, act.Head, &st); err != nil {
 					return xerrors.Errorf("failed to load miner state: %w", err)
 				}
-				
+
 				var available abi.TokenAmount
 				{
 					defer func() {
