@@ -39,7 +39,11 @@ func NewKey(keyinfo types.KeyInfo) (*Key, error) {
 	}
 
 	var err error
-	k.PublicKey, err = sigs.ToPublic(ActSigType(k.Type), k.PrivateKey)
+	pk, err := MakeByte(k.PrivateKey, false)
+	if err != nil {
+		return nil, err
+	}
+	k.PublicKey, err = sigs.ToPublic(ActSigType(k.Type), pk)
 	if err != nil {
 		return nil, err
 	}

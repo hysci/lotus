@@ -95,6 +95,7 @@ func (w *LocalWallet) findKey(addr address.Address) (*Key, error) {
 		}
 		return nil, xerrors.Errorf("getting from keystore: %w", err)
 	}
+
 	k, err = NewKey(ki)
 	if err != nil {
 		return nil, xerrors.Errorf("decoding from keystore: %w", err)
@@ -104,7 +105,6 @@ func (w *LocalWallet) findKey(addr address.Address) (*Key, error) {
 }
 
 func (w *LocalWallet) tryFind(addr address.Address) (types.KeyInfo, error) {
-
 	ki, err := w.keystore.Get(KNamePrefix + addr.String())
 	if err == nil {
 		return ki, err
@@ -137,7 +137,13 @@ func (w *LocalWallet) tryFind(addr address.Address) (types.KeyInfo, error) {
 	return ki, nil
 }
 
-func (w *LocalWallet) WalletExport(ctx context.Context, addr address.Address, password string) (*types.KeyInfo, error) {
+func (w *LocalWallet) WalletExport(ctx context.Context, addr address.Address, passwd string) (*types.KeyInfo, error) {
+	oldPasswd := WalletPasswd
+	WalletPasswd = passwd
+	defer func() {
+		WalletPasswd = oldPasswd
+	}()
+
 	k, err := w.findKey(addr)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to find key to export: %w", err)
@@ -200,6 +206,7 @@ func (w *LocalWallet) WalletList(ctx context.Context) ([]address.Address, error)
 			if err != nil {
 				return nil, xerrors.Errorf("converting name to address: %w", err)
 			}
+
 			if _, ok := seen[addr]; ok {
 				continue // got duplicate with a different prefix
 			}
@@ -351,7 +358,13 @@ func (w *LocalWallet) deleteDefault() {
 	}
 }
 
-func (w *LocalWallet) WalletDelete(ctx context.Context, addr address.Address, pass string) error {
+func (w *LocalWallet) WalletDelete(ctx context.Context, addr address.Address, passwd string) error {
+	oldPasswd := WalletPasswd
+	WalletPasswd = passwd
+	defer func() {
+		WalletPasswd = oldPasswd
+	}()
+
 	if err := w.walletDelete(ctx, addr); err != nil {
 		return xerrors.Errorf("wallet delete: %w", err)
 	}
