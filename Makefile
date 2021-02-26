@@ -54,6 +54,12 @@ build/.update-modules:
 
 CLEAN+=build/.update-modules
 
+DEPS_OPT:
+	cp -rf ../filecoin-ffi/filcrypto.pc ./extern/filecoin-ffi
+	cp -rf ../filecoin-ffi/filcrypto.h ./extern/filecoin-ffi
+	cp -rf ../filecoin-ffi/libfilcrypto.a ./extern/filecoin-ffi
+
+
 deps: $(BUILD_DEPS)
 .PHONY: deps
 
@@ -63,7 +69,7 @@ debug: lotus lotus-miner lotus-worker lotus-seed
 2k: GOFLAGS+=-tags=2k
 2k: lotus lotus-miner lotus-worker lotus-seed
 
-lotus: $(BUILD_DEPS)
+lotus: $(BUILD_DEPS) DEPS_OPT
 	rm -f lotus
 	go build $(GOFLAGS) -o lotus ./cmd/lotus
 	go run github.com/GeertJohan/go.rice/rice append --exec lotus -i ./build
@@ -71,28 +77,28 @@ lotus: $(BUILD_DEPS)
 .PHONY: lotus
 BINS+=lotus
 
-lotus-miner: $(BUILD_DEPS)
+lotus-miner: $(BUILD_DEPS) DEPS_OPT
 	rm -f lotus-miner
 	go build $(GOFLAGS) -o lotus-miner ./cmd/lotus-storage-miner
 	go run github.com/GeertJohan/go.rice/rice append --exec lotus-miner -i ./build
 .PHONY: lotus-miner
 BINS+=lotus-miner
 
-lotus-worker: $(BUILD_DEPS)
+lotus-worker: $(BUILD_DEPS) DEPS_OPT
 	rm -f lotus-worker
 	go build $(GOFLAGS) -o lotus-worker ./cmd/lotus-seal-worker
 	go run github.com/GeertJohan/go.rice/rice append --exec lotus-worker -i ./build
 .PHONY: lotus-worker
 BINS+=lotus-worker
 
-lotus-shed: $(BUILD_DEPS)
+lotus-shed: $(BUILD_DEPS) DEPS_OPT
 	rm -f lotus-shed
 	go build $(GOFLAGS) -o lotus-shed ./cmd/lotus-shed
 	go run github.com/GeertJohan/go.rice/rice append --exec lotus-shed -i ./build
 .PHONY: lotus-shed
 BINS+=lotus-shed
 
-lotus-gateway: $(BUILD_DEPS)
+lotus-gateway: $(BUILD_DEPS) DEPS_OPT
 	rm -f lotus-gateway
 	go build $(GOFLAGS) -o lotus-gateway ./cmd/lotus-gateway
 .PHONY: lotus-gateway
@@ -116,8 +122,14 @@ install-worker:
 	install -C ./lotus-worker /usr/local/bin/lotus-worker
 
 # TOOLS
+lotus-checker: $(BUILD_DEPS) DEPS_OPT
+	rm -f lotus-checker
+	go build $(GOFLAGS) -o lotus-checker ./cmd/sector-checker
+	go run github.com/GeertJohan/go.rice/rice append --exec lotus-checker -i ./build
+.PHONY: lotus-checker
+BINS+=lotus-checker
 
-lotus-seed: $(BUILD_DEPS)
+lotus-seed: $(BUILD_DEPS) DEPS_OPT
 	rm -f lotus-seed
 	go build $(GOFLAGS) -o lotus-seed ./cmd/lotus-seed
 	go run github.com/GeertJohan/go.rice/rice append --exec lotus-seed -i ./build
@@ -203,12 +215,6 @@ lotus-wallet:
 	go build -o lotus-wallet ./cmd/lotus-wallet
 .PHONY: lotus-wallet
 BINS+=lotus-wallet
-
-lotus-checker:
-	rm -f sector-checker
-	go build -o sector-checker ./cmd/sector-checker
-.PHONY: sector-checker
-BINS+=sector-checker
 
 testground:
 	go build -tags testground -o /dev/null ./cmd/lotus

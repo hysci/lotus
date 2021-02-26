@@ -188,18 +188,9 @@ func (m *Sealing) plan(events []statemachine.Event, state *SectorInfo) (func(sta
 			l.Trace = fmt.Sprintf("%+v", err)
 		}
 
-		if len(state.Log) > 8000 {
-			log.Warnw("truncating sector log", "sector", state.SectorNumber)
-			state.Log[2000] = Log{
-				Timestamp: uint64(time.Now().Unix()),
-				Message:   "truncating log (above 8000 entries)",
-				Kind:      fmt.Sprintf("truncate"),
-			}
-
-			state.Log = append(state.Log[:2000], state.Log[:6000]...)
+		if len(state.Log) < 2000 {
+			state.Log = append(state.Log, l)
 		}
-
-		state.Log = append(state.Log, l)
 	}
 
 	if m.notifee != nil {
